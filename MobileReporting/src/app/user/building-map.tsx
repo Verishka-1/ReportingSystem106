@@ -12,9 +12,9 @@ import { router, useLocalSearchParams } from "expo-router";
 
 import InteractiveMap, {
   MapHotspot,
-} from "../components/InteractiveMap";
+} from "../../components/InteractiveMap";
 
-import { COLORS, Spacing } from "../constants/theme";
+import { COLORS, Spacing } from "../../constants/theme";
 
 /*
 |--------------------------------------------------------------------------
@@ -22,11 +22,10 @@ import { COLORS, Spacing } from "../constants/theme";
 |--------------------------------------------------------------------------
 */
 
-const building1Map = require("../../assets/maps/Building1.png");
-const building2Map = require("../../assets/maps/Building2.png");
-const buildingCRMap = require("../../assets/maps/BuildingCR.png");
-const oldBuildingMap = require("../../assets/maps/Old_Building.png");
-
+const building1Map = require("../../../assets/maps/Building1.png");
+const building2Map = require("../../../assets/maps/Building2.png");
+const buildingCRMap = require("../../../assets/maps/BuildingCR.png");
+const oldBuildingMap = require("../../../assets/maps/Old_Building.png");
 /*
 |--------------------------------------------------------------------------
 | PERCENTAGE HOTSPOT TYPE

@@ -1,21 +1,32 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useState } from "react";
 import {
-  Image,
-  ImageSourcePropType,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 
-import AdminInteractiveMap from "../components/AdminInteractiveMap";
-import type { MapHotspot } from "../components/AdminInteractiveMap";
+import AdminInteractiveMap from "../../components/AdminInteractiveMap";
+import type { MapHotspot } from "../../components/AdminInteractiveMap";
 
-import { COLORS, Spacing } from "../constants/theme";
-import { reports } from "../data/rooms";
+import { COLORS, Spacing } from "../../constants/theme";
+import { apiRequest } from "../../services/api";
 
-const campusMap = require("../../assets/maps/Campus_Map.png");
+const campusMap = require("../../../assets/maps/Campus_Map.png");
+
+/**
+ * Replace these example numbers with the real buildings.id values
+ * from your Laravel database.
+ *
+ * The object keys must match the building hotspot IDs below.
+ */
+const BUILDING_DATABASE_IDS: Record<string, number> = {
+  building1: 1,
+  building2: 2,
+  oldBuilding: 3,
+  buildingCR: 4,
+};
 
 type PercentageHotspot = {
   id: string;
@@ -25,6 +36,10 @@ type PercentageHotspot = {
   width: number;
   height: number;
   type: "building" | "facility";
+};
+
+type CampusCountsResponse = {
+  building_counts?: Record<string, number | string>;
 };
 
 const CAMPUS_HOTSPOTS: PercentageHotspot[] = [
@@ -301,16 +316,10 @@ const CAMPUS_HOTSPOTS: PercentageHotspot[] = [
 ];
 
 function convertCampusHotspots(): MapHotspot[] {
-  const resolved = Image.resolveAssetSource(campusMap);
-
-  const imageWidth = resolved?.width ?? 1;
-  const imageHeight = resolved?.height ?? 1;
-
   return CAMPUS_HOTSPOTS.map((hotspot) => ({
     id: hotspot.id,
     name: hotspot.name,
     type: hotspot.type,
-
     x: hotspot.x,
     y: hotspot.y,
     width: hotspot.width,
@@ -319,59 +328,82 @@ function convertCampusHotspots(): MapHotspot[] {
 }
 
 export default function AdminCampusMapScreen() {
-  const pixelHotspots = useMemo(
-    () => convertCampusHotspots(),
-    []
-  );
+  const pixelHotspots = convertCampusHotspots();
 
-  /*
-   * Temporary campus-level count mapping.
+  const [reportCounts, setReportCounts] = useState<
+    Record<string, number>
+  >({});
+  const [countsLoading, setCountsLoading] = useState(true);
+  const [countsError, setCountsError] = useState("");
+
+  /**
+   * Fetch campus building report totals from Laravel.
    *
-   * For buildings, this sums reports from their rooms.
-   * Other campus locations currently have 0 until their
-   * report/location IDs are connected to the report data.
+   * Expected API response:
+   * {
+   *   "building_counts": {
+   *     "1": 4,
+   *     "2": 2
+   *   }
+   * }
+   *
+   * Keys in building_counts are database building IDs.
    */
-  const reportCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
+  const loadReportCounts = useCallback(async () => {
+    try {
+      setCountsLoading(true);
+      setCountsError("");
 
-    CAMPUS_HOTSPOTS.forEach((hotspot) => {
-      counts[hotspot.id] = 0;
-    });
+      const result = (await apiRequest(
+        "/admin/campus-counts"
+      )) as CampusCountsResponse;
 
-    // Building 1
-    counts["building1"] = reports.filter((report) =>
-      report.roomId?.startsWith("new1-")
-    ).length;
+      const databaseCounts = result?.building_counts ?? {};
+      const normalizedCounts: Record<string, number> = {};
 
-    // Building 2
-    counts["building2"] = reports.filter((report) =>
-      report.roomId?.startsWith("new2-")
-    ).length;
+      // Initialize all map hotspot counts to zero.
+      CAMPUS_HOTSPOTS.forEach((hotspot) => {
+        normalizedCounts[hotspot.id] = 0;
+      });
 
-    // Old Building
-    counts["oldBuilding"] = reports.filter((report) =>
-      report.roomId?.startsWith("old-")
-    ).length;
+      // Transfer counts for the main building hotspots using
+      // the database IDs configured above.
+      Object.entries(BUILDING_DATABASE_IDS).forEach(
+        ([hotspotId, databaseId]) => {
+          normalizedCounts[hotspotId] = Number(
+            databaseCounts[String(databaseId)] ?? 0
+          );
+        }
+      );
 
-    // Building CR
-    counts["buildingCR"] = reports.filter((report) =>
-      [
-        "female-cr1",
-        "male-cr1",
-        "female-cr2",
-        "male-cr2",
-        "female-cr3",
-        "male-cr3",
-      ].includes(report.roomId)
-    ).length;
+      setReportCounts(normalizedCounts);
+    } catch (error) {
+      console.error(
+        "Failed to load campus report counts:",
+        error
+      );
 
-    return counts;
+      setCountsError(
+        error instanceof Error
+          ? error.message
+          : "Could not load report counts. Please try again."
+      );
+
+      setReportCounts({});
+    } finally {
+      setCountsLoading(false);
+    }
   }, []);
 
+  // Reload the report counts whenever this screen comes into focus.
+  useFocusEffect(
+    useCallback(() => {
+      loadReportCounts();
+    }, [loadReportCounts])
+  );
+
   const handleCampusPress = (hotspot: MapHotspot) => {
-    /*
-     * Main buildings open their detailed room map.
-     */
+    // Main buildings open the detailed building/room map.
     if (
       hotspot.id === "building1" ||
       hotspot.id === "building2" ||
@@ -388,10 +420,7 @@ export default function AdminCampusMapScreen() {
       return;
     }
 
-    /*
-     * Other campus locations currently open the
-     * general room reports screen.
-     */
+    // Other campus locations open the general location reports screen.
     router.push({
       pathname: "/admin-room-reports",
       params: {
@@ -404,12 +433,13 @@ export default function AdminCampusMapScreen() {
   return (
     <View style={styles.container}>
       {/* HEADER */}
-
       <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
           style={styles.backButton}
           hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           <Text style={styles.backText}>‹</Text>
         </Pressable>
@@ -426,27 +456,46 @@ export default function AdminCampusMapScreen() {
       </View>
 
       {/* MAP */}
-
       <View style={styles.mapArea}>
         <AdminInteractiveMap
-            image={campusMap}
-            hotspots={pixelHotspots}
-            onPress={handleCampusPress}
-            reportCounts={reportCounts}
-            debug={false}
-            />
+          image={campusMap}
+          hotspots={pixelHotspots}
+          onPress={handleCampusPress}
+          reportCounts={reportCounts}
+          debug={false}
+        />
       </View>
 
       {/* FOOTER */}
-
       <View style={styles.footer}>
-        <Text style={styles.footerTitle}>
-          Campus Report Counts
-        </Text>
+        <View style={styles.footerTextContainer}>
+          <Text style={styles.footerTitle}>
+            Campus Report Counts
+          </Text>
 
-        <Text style={styles.footerText}>
-          Tap a building to view reports by room.
-        </Text>
+          <Text style={styles.footerText}>
+            {countsLoading
+              ? "Loading report counts…"
+              : countsError
+                ? countsError
+                : "Tap a building to view reports by room."}
+          </Text>
+        </View>
+
+        <Pressable
+          onPress={loadReportCounts}
+          style={[
+            styles.refreshButton,
+            countsLoading && styles.refreshButtonDisabled,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Refresh report counts"
+          disabled={countsLoading}
+        >
+          <Text style={styles.refreshText}>
+            {countsLoading ? "…" : "Refresh"}
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -514,6 +563,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  footerTextContainer: {
+    flex: 1,
   },
 
   footerTitle: {
@@ -526,5 +582,22 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontSize: 10,
     marginTop: 2,
+  },
+
+  refreshButton: {
+    backgroundColor: COLORS.maroon,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+
+  refreshButtonDisabled: {
+    opacity: 0.6,
+  },
+
+  refreshText: {
+    color: COLORS.white,
+    fontSize: 11,
+    fontWeight: "700",
   },
 });

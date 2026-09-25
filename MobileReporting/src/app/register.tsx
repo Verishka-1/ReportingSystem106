@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -13,19 +14,27 @@ import {
 import { router } from "expo-router";
 
 import { COLORS, Spacing } from "../constants/theme";
+import { apiRequest } from "../services/api";
 
 export default function RegisterScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = () => {
-    if (!name.trim() || !email.trim() || !password || !confirmPassword) {
-      Alert.alert(
-        "Required Fields",
-        "Please complete all fields."
-      );
+  const handleRegister = async () => {
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanName || !cleanEmail || !password || !confirmPassword) {
+      Alert.alert("Required Fields", "Please complete all fields.");
+      return;
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(cleanEmail)) {
+      Alert.alert("Invalid Email", "Please enter a valid email address.");
       return;
     }
 
@@ -38,23 +47,43 @@ export default function RegisterScreen() {
     }
 
     if (password !== confirmPassword) {
-      Alert.alert(
-        "Password Error",
-        "Passwords do not match."
-      );
+      Alert.alert("Password Error", "Passwords do not match.");
       return;
     }
 
-    Alert.alert(
-      "Registration Successful",
-      "Your account has been created.",
-      [
-        {
-          text: "Continue",
-          onPress: () => router.replace("/user-dashboard" as any),
-        },
-      ]
-    );
+    setLoading(true);
+
+    try {
+      await apiRequest("/register", {
+        method: "POST",
+        body: JSON.stringify({
+          name: cleanName,
+          email: cleanEmail,
+          password,
+          password_confirmation: confirmPassword,
+        }),
+      });
+
+      Alert.alert(
+        "Registration Successful",
+        "Your account has been created. You can now sign in.",
+        [
+          {
+            text: "Go to Login",
+            onPress: () => router.replace("/login" as any),
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert(
+        "Registration Failed",
+        error instanceof Error
+          ? error.message
+          : "Please check your information and try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -69,6 +98,7 @@ export default function RegisterScreen() {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
+          disabled={loading}
         >
           <Text style={styles.backText}>‹ Back</Text>
         </TouchableOpacity>
@@ -82,17 +112,18 @@ export default function RegisterScreen() {
 
         <View style={styles.card}>
           <Text style={styles.label}>Full Name</Text>
-
           <TextInput
             style={styles.input}
             placeholder="Enter your full name"
             placeholderTextColor={COLORS.gray}
             value={name}
             onChangeText={setName}
+            autoCapitalize="words"
+            editable={!loading}
+            returnKeyType="next"
           />
 
           <Text style={styles.label}>Email</Text>
-
           <TextInput
             style={styles.input}
             placeholder="Enter your email"
@@ -101,10 +132,12 @@ export default function RegisterScreen() {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            autoCorrect={false}
+            editable={!loading}
+            returnKeyType="next"
           />
 
           <Text style={styles.label}>Password</Text>
-
           <TextInput
             style={styles.input}
             placeholder="Create a password"
@@ -112,10 +145,11 @@ export default function RegisterScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            editable={!loading}
+            returnKeyType="next"
           />
 
           <Text style={styles.label}>Confirm Password</Text>
-
           <TextInput
             style={styles.input}
             placeholder="Confirm your password"
@@ -123,23 +157,29 @@ export default function RegisterScreen() {
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
+            editable={!loading}
+            returnKeyType="done"
+            onSubmitEditing={handleRegister}
           />
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleRegister}
             activeOpacity={0.8}
+            disabled={loading}
           >
-            <Text style={styles.buttonText}>CREATE ACCOUNT</Text>
+            {loading ? (
+              <ActivityIndicator color={COLORS.white} />
+            ) : (
+              <Text style={styles.buttonText}>CREATE ACCOUNT</Text>
+            )}
           </TouchableOpacity>
 
           <View style={styles.loginRow}>
-            <Text style={styles.loginText}>
-              Already have an account?
-            </Text>
-
+            <Text style={styles.loginText}>Already have an account?</Text>
             <TouchableOpacity
-              onPress={() => router.replace("/")}
+              onPress={() => router.replace("/login" as any)}
+              disabled={loading}
             >
               <Text style={styles.loginLink}> Login</Text>
             </TouchableOpacity>
@@ -220,6 +260,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: Spacing.sm,
+  },
+
+  buttonDisabled: {
+    opacity: 0.7,
   },
 
   buttonText: {

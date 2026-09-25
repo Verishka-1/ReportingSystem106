@@ -13,35 +13,19 @@ return new class extends Migration
 
             $table->string('report_number')->unique();
 
-            // Person who submitted the report
             $table->foreignId('user_id')
+                ->nullable()
                 ->constrained('users')
-                ->cascadeOnDelete();
+                ->nullOnDelete();
 
-            // Location
-            $table->foreignId('building_id')
-                ->constrained('buildings')
-                ->restrictOnDelete();
-
-            $table->foreignId('room_id')
-                ->constrained('rooms')
-                ->restrictOnDelete();
-
-            // Damaged property
-            $table->string('property_name');
-
-            // Damage description
+            $table->string('title');
             $table->text('description');
 
-            // Report priority
-            $table->enum('priority', [
-                'low',
-                'medium',
-                'high',
-                'urgent',
-            ])->default('medium');
+            // Stored as names for this first version.
+            // These can later be replaced with building_id / room_id foreign keys.
+            $table->string('building_name');
+            $table->string('room_name')->nullable();
 
-            // Report workflow
             $table->enum('status', [
                 'pending',
                 'verified',
@@ -51,9 +35,16 @@ return new class extends Migration
                 'rejected',
             ])->default('pending');
 
-            $table->timestamp('reported_at')->useCurrent();
+            $table->enum('priority', [
+                'low',
+                'medium',
+                'high',
+                'urgent',
+            ])->default('medium');
 
             $table->timestamps();
+
+            $table->index(['status', 'created_at']);
         });
     }
 

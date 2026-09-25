@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -12,7 +13,8 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
-import { COLORS, Spacing } from "../constants/theme";
+import { COLORS, Spacing } from "../../constants/theme";
+import { apiRequest } from "../../services/api";
 
 export default function ReportDamageScreen() {
   const params = useLocalSearchParams<{
@@ -22,41 +24,27 @@ export default function ReportDamageScreen() {
     roomName?: string;
   }>();
 
-  /*
-   * Keep the internal IDs.
-   * These are useful when you eventually save the report
-   * to your database.
-   */
   const [selectedBuilding, setSelectedBuilding] = useState(
-    params.building ?? ""
+    typeof params.building === "string" ? params.building : ""
   );
-
   const [selectedRoom, setSelectedRoom] = useState(
-    params.room ?? ""
+    typeof params.room === "string" ? params.room : ""
   );
-
-  /*
-   * Keep the human-readable names separately.
-   */
-  const [selectedBuildingName, setSelectedBuildingName] =
-    useState(params.buildingName ?? "");
-
-  const [selectedRoomName, setSelectedRoomName] =
-    useState(params.roomName ?? "");
+  const [selectedBuildingName, setSelectedBuildingName] = useState(
+    typeof params.buildingName === "string" ? params.buildingName : ""
+  );
+  const [selectedRoomName, setSelectedRoomName] = useState(
+    typeof params.roomName === "string" ? params.roomName : ""
+  );
 
   const [description, setDescription] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  /*
-   * Open campus map.
-   */
   const chooseLocation = () => {
     router.push("/campus-map" as any);
   };
 
-  /*
-   * Submit report.
-   */
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedBuilding || !selectedRoom) {
       Alert.alert(
         "Location Required",
@@ -65,7 +53,9 @@ export default function ReportDamageScreen() {
       return;
     }
 
-    if (!description.trim()) {
+    const cleanDescription = description.trim();
+
+    if (!cleanDescription) {
       Alert.alert(
         "Description Required",
         "Please provide a short description of the damage."
@@ -73,20 +63,38 @@ export default function ReportDamageScreen() {
       return;
     }
 
-    Alert.alert(
-      "Report Submitted",
-      `Your damage report has been submitted.\n\nLocation: ${
-        selectedBuildingName || selectedBuilding
-      } - ${
-        selectedRoomName || selectedRoom
-      }\n\nDescription: ${description.trim()}`,
-      [
-        {
-          text: "OK",
-          onPress: () => router.replace("/user-dashboard" as any),
-        },
-      ]
-    );
+    setSubmitting(true);
+
+    try {
+      await apiRequest("/reports", {
+        method: "POST",
+        body: JSON.stringify({
+          building_name: selectedBuildingName || selectedBuilding,
+          room_name: selectedRoomName || selectedRoom,
+          description: cleanDescription,
+        }),
+      });
+
+      Alert.alert(
+        "Report Submitted",
+        "Your damage report has been submitted successfully.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.replace("/user-dashboard" as any),
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert(
+        "Submission Failed",
+        error instanceof Error
+          ? error.message
+          : "Could not submit your report. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -98,31 +106,25 @@ export default function ReportDamageScreen() {
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
       >
-        {/* HEADER */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.backButton}
+            disabled={submitting}
           >
             <Text style={styles.backText}>‹</Text>
           </TouchableOpacity>
 
           <View>
-            <Text style={styles.headerTitle}>
-              Report Damage
-            </Text>
-
+            <Text style={styles.headerTitle}>Report Damage</Text>
             <Text style={styles.headerSubtitle}>
               Report a damaged school property
             </Text>
           </View>
         </View>
 
-        {/* LOCATION */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>
-            Property Location
-          </Text>
+          <Text style={styles.sectionTitle}>Property Location</Text>
 
           <Text style={styles.sectionDescription}>
             Select the building and room where the damage occurred.
@@ -132,9 +134,10 @@ export default function ReportDamageScreen() {
             style={styles.mapButton}
             onPress={chooseLocation}
             activeOpacity={0.8}
+            disabled={submitting}
           >
             <Text style={styles.mapButtonText}>
-              {selectedRoom
+              {selectedBuilding && selectedRoom
                 ? "Change Location"
                 : "Select Location on Map"}
             </Text>
@@ -142,9 +145,7 @@ export default function ReportDamageScreen() {
 
           {selectedBuilding && selectedRoom ? (
             <View style={styles.selectedLocation}>
-              <Text style={styles.selectedLabel}>
-                Selected Location
-              </Text>
+              <Text style={styles.selectedLabel}>Selected Location</Text>
 
               <Text style={styles.selectedLocationText}>
                 {selectedBuildingName || selectedBuilding}
@@ -163,11 +164,8 @@ export default function ReportDamageScreen() {
           )}
         </View>
 
-        {/* DESCRIPTION */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>
-            Damage Description
-          </Text>
+          <Text style={styles.sectionTitle}>Damage Description</Text>
 
           <Text style={styles.sectionDescription}>
             Briefly describe what is damaged.
@@ -182,6 +180,7 @@ export default function ReportDamageScreen() {
             multiline
             textAlignVertical="top"
             maxLength={500}
+            editable={!submitting}
           />
 
           <Text style={styles.characterCount}>
@@ -189,24 +188,30 @@ export default function ReportDamageScreen() {
           </Text>
         </View>
 
-        {/* SUBMIT */}
         <TouchableOpacity
-          style={styles.submitButton}
+          style={[
+            styles.submitButton,
+            submitting && styles.submitButtonDisabled,
+          ]}
           onPress={handleSubmit}
           activeOpacity={0.8}
+          disabled={submitting}
         >
-          <Text style={styles.submitButtonText}>
-            SUBMIT DAMAGE REPORT
-          </Text>
+          {submitting ? (
+            <ActivityIndicator color={COLORS.white} />
+          ) : (
+            <Text style={styles.submitButtonText}>
+              SUBMIT DAMAGE REPORT
+            </Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.cancelButton}
           onPress={() => router.back()}
+          disabled={submitting}
         >
-          <Text style={styles.cancelButtonText}>
-            Cancel
-          </Text>
+          <Text style={styles.cancelButtonText}>Cancel</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -361,6 +366,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
+  },
+
+  submitButtonDisabled: {
+    opacity: 0.7,
   },
 
   submitButtonText: {

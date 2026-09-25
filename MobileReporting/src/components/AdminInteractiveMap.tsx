@@ -20,13 +20,13 @@ import {
   GestureDetector,
 } from "react-native-gesture-handler";
 
+const HOTSPOT_REFERENCE_WIDTH = 2000;
+const HOTSPOT_REFERENCE_HEIGHT = 2000;
+
 export type MapHotspot = {
   id: string;
   name: string;
 
-  /**
-   * Position in the ORIGINAL PNG.
-   */
   x: number;
   y: number;
   width: number;
@@ -40,16 +40,6 @@ type AdminInteractiveMapProps = {
   hotspots: MapHotspot[];
   onPress: (hotspot: MapHotspot) => void;
 
-  /**
-   * Number of reports for each room/hotspot.
-   *
-   * Example:
-   * {
-   *   "br202": 3,
-   *   "br201": 1,
-   *   "br200": 0
-   * }
-   */
   reportCounts?: Record<string, number>;
 
   debug?: boolean;
@@ -63,13 +53,10 @@ export default function AdminInteractiveMap({
   hotspots,
   onPress,
   reportCounts = {},
-  debug = false,
+  debug = true,
 }: AdminInteractiveMapProps) {
   const [containerWidth, setContainerWidth] = React.useState(0);
 
-  // ============================================================
-  // IMAGE SIZE
-  // ============================================================
 
   const [imageSize, setImageSize] = React.useState({
     width: 1,
@@ -87,9 +74,6 @@ export default function AdminInteractiveMap({
     }
   }, [image]);
 
-  // ============================================================
-  // MAP DIMENSIONS
-  // ============================================================
 
   const aspectRatio =
     imageSize.width / imageSize.height;
@@ -101,26 +85,16 @@ export default function AdminInteractiveMap({
       ? containerWidth / aspectRatio
       : 0;
 
-  // ============================================================
-  // ZOOM
-  // ============================================================
 
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
 
-  // ============================================================
-  // PAN
-  // ============================================================
 
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
 
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
-
-  // ============================================================
-  // PINCH
-  // ============================================================
 
   const pinchGesture = Gesture.Pinch()
     .onBegin(() => {
@@ -144,9 +118,6 @@ export default function AdminInteractiveMap({
       }
     });
 
-  // ============================================================
-  // PAN
-  // ============================================================
 
   const panGesture = Gesture.Pan()
     .minDistance(15)
@@ -199,9 +170,6 @@ export default function AdminInteractiveMap({
       );
     });
 
-  // ============================================================
-  // DOUBLE TAP
-  // ============================================================
 
   const doubleTapGesture = Gesture.Tap()
     .numberOfTaps(2)
@@ -221,18 +189,11 @@ export default function AdminInteractiveMap({
       }
     });
 
-  // ============================================================
-  // COMBINED MAP GESTURE
-  // ============================================================
 
   const mapGesture = Gesture.Simultaneous(
     pinchGesture,
     panGesture
   );
-
-  // ============================================================
-  // ANIMATED MAP
-  // ============================================================
 
   const animatedMapStyle =
     useAnimatedStyle(() => {
@@ -251,10 +212,6 @@ export default function AdminInteractiveMap({
       };
     });
 
-  // ============================================================
-  // LAYOUT
-  // ============================================================
-
   const handleLayout = (
     event: LayoutChangeEvent
   ) => {
@@ -264,9 +221,6 @@ export default function AdminInteractiveMap({
     setContainerWidth(width);
   };
 
-  // ============================================================
-  // HOTSPOT PRESS
-  // ============================================================
 
   const handleHotspotPress = (
     hotspot: MapHotspot
@@ -279,10 +233,6 @@ export default function AdminInteractiveMap({
 
     onPress(hotspot);
   };
-
-  // ============================================================
-  // RENDER
-  // ============================================================
 
   return (
     <View
@@ -313,9 +263,6 @@ export default function AdminInteractiveMap({
                   animatedMapStyle,
                 ]}
               >
-                {/* ==================================================
-                    MAP IMAGE
-                   ================================================== */}
 
                 <Image
                   source={image}
@@ -329,30 +276,28 @@ export default function AdminInteractiveMap({
                   resizeMode="stretch"
                 />
 
-                {/* ==================================================
-                    ROOM / BUILDING HOTSPOTS
-                   ================================================== */}
 
                 {hotspots.map((hotspot) => {
                   const left =
-                    (hotspot.x /
-                      imageSize.width) *
-                    mapWidth;
+                    (hotspot.x / HOTSPOT_REFERENCE_WIDTH) * mapWidth;
 
                   const top =
-                    (hotspot.y /
-                      imageSize.height) *
-                    mapHeight;
+                    (hotspot.y / HOTSPOT_REFERENCE_HEIGHT) * mapHeight;
 
                   const width =
-                    (hotspot.width /
-                      imageSize.width) *
-                    mapWidth;
+                    (hotspot.width / HOTSPOT_REFERENCE_WIDTH) * mapWidth;
 
                   const height =
-                    (hotspot.height /
-                      imageSize.height) *
-                    mapHeight;
+                    (hotspot.height / HOTSPOT_REFERENCE_HEIGHT) * mapHeight;
+
+                  const touchWidth = Math.max(width, 44);
+                  const touchHeight = Math.max(height, 44);
+
+                  const touchLeft =
+                    left + width / 2 - touchWidth / 2;
+
+                  const touchTop =
+                    top + height / 2 - touchHeight / 2;
 
                   const reportCount =
                     reportCounts[hotspot.id] ?? 0;
@@ -360,54 +305,30 @@ export default function AdminInteractiveMap({
                   return (
                     <Pressable
                       key={hotspot.id}
-                      onPress={() =>
-                        handleHotspotPress(
-                          hotspot
-                        )
-                      }
-                      hitSlop={2}
+                      onPress={() => handleHotspotPress(hotspot)}
+                      hitSlop={4}
+                      accessibilityRole="button"
+                      accessibilityLabel={`View reports for ${hotspot.name}`}
                       style={({ pressed }) => [
                         styles.hotspot,
-
                         {
-                          left,
-                          top,
-                          width,
-                          height,
+                          left: touchLeft,
+                          top: touchTop,
+                          width: touchWidth,
+                          height: touchHeight,
                         },
-
-                        debug &&
-                          styles.debugHotspot,
-
-                        pressed &&
-                          styles.hotspotPressed,
+                        debug && styles.debugHotspot,
+                        pressed && styles.hotspotPressed,
                       ]}
                     >
-                      {/* ==================================================
-                          REPORT COUNT
-                         ================================================== */}
-
-                      <View
-                        style={styles.reportCountBox}
-                      >
-                        <Text
-                          style={styles.reportCountText}
-                        >
+                      <View style={styles.reportCountBox}>
+                        <Text style={styles.reportCountText}>
                           {reportCount}
                         </Text>
                       </View>
 
-                      {/* ==================================================
-                          DEBUG ROOM NAME
-                         ================================================== */}
-
                       {debug && (
-                        <Text
-                          style={
-                            styles.debugText
-                          }
-                          numberOfLines={2}
-                        >
+                        <Text style={styles.debugText} numberOfLines={2}>
                           {hotspot.name}
                         </Text>
                       )}
@@ -423,27 +344,18 @@ export default function AdminInteractiveMap({
 }
 
 const styles = StyleSheet.create({
-  // ============================================================
-  // OUTER
-  // ============================================================
 
   outerContainer: {
     width: "100%",
     overflow: "hidden",
   },
 
-  // ============================================================
-  // VIEWPORT
-  // ============================================================
 
   viewport: {
     overflow: "hidden",
     backgroundColor: "#FFFFFF",
   },
 
-  // ============================================================
-  // MAP
-  // ============================================================
 
   mapContainer: {
     position: "relative",
@@ -456,9 +368,6 @@ const styles = StyleSheet.create({
     top: 0,
   },
 
-  // ============================================================
-  // HOTSPOTS
-  // ============================================================
 
   hotspot: {
     position: "absolute",
@@ -471,9 +380,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  // ============================================================
-  // REPORT COUNT
-  // ============================================================
 
   reportCountBox: {
   minWidth: 20,
@@ -495,9 +401,6 @@ reportCountText: {
   textAlign: "center",
 },
 
-  // ============================================================
-  // DEBUG
-  // ============================================================
 
   debugHotspot: {
     backgroundColor:
@@ -520,10 +423,6 @@ reportCountText: {
 
     textAlign: "center",
   },
-
-  // ============================================================
-  // PRESSED
-  // ============================================================
 
   hotspotPressed: {
     backgroundColor:

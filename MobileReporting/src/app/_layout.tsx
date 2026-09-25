@@ -15,13 +15,8 @@ export default function RootLayout() {
       >
         <Stack.Screen name="login" />
         <Stack.Screen name="register" />
-        <Stack.Screen name="user-dashboard" />
-        <Stack.Screen name="select-room" />
-        <Stack.Screen name="report-damage" />
-        <Stack.Screen name="campus-map" />
-        <Stack.Screen name="building-map" />
-        <Stack.Screen name="admin-dashboard" />
-        <Stack.Screen name="admin-room-reports" />
+        <Stack.Screen name="(user)" />
+        <Stack.Screen name="(admin)" />
       </Stack>
     </GestureHandlerRootView>
   );

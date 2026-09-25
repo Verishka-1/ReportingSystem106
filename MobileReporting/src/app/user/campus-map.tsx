@@ -7,18 +7,18 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 
-import { COLORS, Spacing } from "../constants/theme";
+import { COLORS, Spacing } from "../../constants/theme";
 
-import InteractiveMap from "../components/InteractiveMap";
+import InteractiveMap from "../../components/InteractiveMap";
 
 // Use a runtime asset require so TypeScript does not try to resolve the PNG
 // as a typed module in this screen file.
-const campusMap = require("../../assets/maps/Campus_Map.png");
+const campusMap = require("../../../assets/maps/Campus_Map.png");
 
 import {
   CAMPUS_HOTSPOTS,
   CampusHotspot,
-} from "../data/campusHotspots";
+} from "../../data/campusHotspots";
 
 export default function CampusMapScreen() {
   const mapHotspots = CAMPUS_HOTSPOTS.map((hotspot) => ({
@@ -28,7 +28,6 @@ export default function CampusMapScreen() {
   }));
 
   const openLocation = (hotspot: CampusHotspot) => {
-    // Buildings open their detailed maps.
     if (hotspot.type === "building") {
       router.push({
         pathname: "/building-map",
@@ -41,7 +40,6 @@ export default function CampusMapScreen() {
       return;
     }
 
-    // Rooms/facilities are immediately selected.
     router.push({
       pathname: "/report-damage",
       params: {
