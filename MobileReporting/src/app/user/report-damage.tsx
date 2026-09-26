@@ -72,8 +72,8 @@ export default function ReportDamageScreen() {
 
     const result =
       source === "camera"
-        ? await ImagePicker.launchCameraAsync({ quality: 0.7 })
-        : await ImagePicker.launchImageLibraryAsync({ quality: 0.7 });
+        ? await ImagePicker.launchCameraAsync({ quality: 0.3 })
+        : await ImagePicker.launchImageLibraryAsync({ quality: 0.3 });
 
     if (!result.canceled && result.assets?.length) {
       setPhotos((current) => [...current, result.assets[0].uri]);

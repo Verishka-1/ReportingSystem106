@@ -40,7 +40,7 @@ export async function apiRequest(path: string, options: ApiOptions = {}) {
     response = await fetch(`${API_URL}${path}`, { ...rest, headers });
   } catch (networkError) {
     throw new Error(
-      "Could not reach the server. Check your internet connection and that the API address in services/api.ts is correct."
+      `Could not reach the server at ${API_URL}${path}. Reason: ${String(networkError)}`
     );
   }
 
