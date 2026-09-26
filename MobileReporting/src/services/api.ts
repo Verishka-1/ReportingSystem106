@@ -152,15 +152,21 @@ export async function submitReport(payload: {
   if (payload.room_name) form.append("room_name", payload.room_name);
   form.append("description", payload.description);
 
-  (payload.photoUris ?? []).forEach((uri, index) => {
-    const fileName = uri.split("/").pop() || `photo-${index}.jpg`;
-    const extensionMatch = /\.(\w+)$/.exec(fileName);
-    const fileType = extensionMatch ? `image/${extensionMatch[1]}` : "image/jpeg";
+  const photoUris = payload.photoUris ?? [];
 
-    // React Native's fetch/FormData accepts this { uri, name, type } shape
-    // for file uploads even though it isn't a real DOM File object.
-    form.append("photos[]", { uri, name: fileName, type: fileType } as any);
-  });
+  for (let index = 0; index < photoUris.length; index++) {
+    const uri = photoUris[index];
+    const fileName = uri.split("/").pop() || `photo-${index}.jpg`;
+
+    // Convert the local file into a real Blob instead of using the
+    // older { uri, name, type } shorthand - some React Native / Expo
+    // versions reject that shorthand with "Unsupported FormDataPart
+    // implementation". Fetching the local file and reading it as a
+    // blob works reliably across versions.
+    const fileResponse = await fetch(uri);
+    const blob = await fileResponse.blob();
+    form.append("photos[]", blob, fileName);
+  }
 
   return apiRequest("/reports", {
     method: "POST",
@@ -168,7 +174,6 @@ export async function submitReport(payload: {
     isFormData: true,
   });
 }
-
 export async function getMyReports() {
   const result = await apiRequest("/my/reports");
   return result?.data ?? [];
