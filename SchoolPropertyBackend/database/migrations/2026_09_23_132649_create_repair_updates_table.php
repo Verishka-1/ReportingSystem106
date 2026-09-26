@@ -23,6 +23,7 @@ return new class extends Migration
                 'assigned',
                 'in_progress',
                 'completed',
+                'rejected',
             ]);
 
             $table->text('notes')->nullable();

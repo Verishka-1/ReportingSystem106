@@ -143,7 +143,7 @@ export default function Reports() {
                   }
                   onPress={() =>
                     router.push({
-                      pathname: "/admin-report-details",
+                      pathname: "/user/report-details",
                       params: { id: String(report.id) },
                     } as any)
                   }

@@ -762,7 +762,7 @@ export default function BuildingMapScreen() {
     );
 
     router.push({
-      pathname: "/report-damage",
+      pathname: "/user/report-damage",
 
       params: {
         building: config.name,

@@ -15,8 +15,8 @@ export default function RootLayout() {
       >
         <Stack.Screen name="login" />
         <Stack.Screen name="register" />
-        <Stack.Screen name="(user)" />
-        <Stack.Screen name="(admin)" />
+        <Stack.Screen name="user" />
+        <Stack.Screen name="admin" />
       </Stack>
     </GestureHandlerRootView>
   );

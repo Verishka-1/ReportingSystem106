@@ -30,7 +30,7 @@ export default function CampusMapScreen() {
   const openLocation = (hotspot: CampusHotspot) => {
     if (hotspot.type === "building") {
       router.push({
-        pathname: "/building-map",
+        pathname: "/user/building-map",
         params: {
           building: hotspot.id,
           name: hotspot.name,
@@ -41,7 +41,7 @@ export default function CampusMapScreen() {
     }
 
     router.push({
-      pathname: "/report-damage",
+      pathname: "/user/report-damage",
       params: {
         building: hotspot.name,
         room: hotspot.name,

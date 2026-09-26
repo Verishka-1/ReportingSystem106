@@ -57,7 +57,7 @@ export default function AdminReports() {
 
   const openReport = (reportId: number) => {
     router.push({
-      pathname: "/admin-report-details",
+      pathname: "/admin/admin-report-details",
       params: { id: String(reportId) },
     } as any);
   };

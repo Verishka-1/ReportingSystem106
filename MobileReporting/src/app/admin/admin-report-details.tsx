@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
+  ScrollView,
   Text,
   View,
 } from "react-native";
@@ -10,6 +12,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { C } from "../../constants/palette";
 import { Page, Header, Card, Button, Pill } from "../../components/Kit";
 import { apiRequest } from "../../services/api";
+
+type Photo = { id: number; url: string };
 
 type ReportDetails = {
   id: number;
@@ -21,6 +25,7 @@ type ReportDetails = {
   status: string;
   priority?: string;
   created_at: string;
+  photos?: Photo[];
   user?: {
     name?: string;
     email?: string;
@@ -194,19 +199,37 @@ export default function AdminReportDetails() {
           {report.description}
         </Text>
 
-        <View
-          style={{
-            height: 140,
-            backgroundColor: "#F0ECEE",
-            borderRadius: 10,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ color: C.muted }}>
-            No photo attached to this report
-          </Text>
-        </View>
+        {report.photos && report.photos.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {report.photos.map((photo) => (
+              <Image
+                key={photo.id}
+                source={{ uri: photo.url }}
+                style={{
+                  width: 160,
+                  height: 140,
+                  borderRadius: 10,
+                  marginRight: 10,
+                  backgroundColor: "#F0ECEE",
+                }}
+              />
+            ))}
+          </ScrollView>
+        ) : (
+          <View
+            style={{
+              height: 140,
+              backgroundColor: "#F0ECEE",
+              borderRadius: 10,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ color: C.muted }}>
+              No photo attached to this report
+            </Text>
+          </View>
+        )}
 
         <Text style={{ color: C.muted, fontSize: 12 }}>
           Reporter: {report.user?.name ?? "Unknown user"} · {reportDate}

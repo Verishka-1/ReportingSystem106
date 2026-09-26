@@ -14,20 +14,38 @@ import {
 import { router } from "expo-router";
 
 import { COLORS, Spacing } from "../constants/theme";
-import { apiRequest } from "../services/api";
+import { register } from "../services/api";
+
+type Role = "student" | "teacher";
+
+// Mirrors the backend's Password::min(8)->mixedCase()->symbols() rule
+// (see AuthController::register) so the person gets instant feedback
+// instead of waiting for a server round-trip.
+function getPasswordProblem(password: string): string | null {
+  if (password.length < 8) return "Password must be at least 8 characters.";
+  if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter.";
+  if (!/[a-z]/.test(password)) return "Password must contain at least one lowercase letter.";
+  if (!/[^A-Za-z0-9]/.test(password)) return "Password must contain at least one special character.";
+  return null;
+}
 
 export default function RegisterScreen() {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState<Role>("student");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    const cleanName = name.trim();
+    const cleanFirstName = firstName.trim();
+    const cleanLastName = lastName.trim();
+    const cleanUsername = username.trim();
     const cleanEmail = email.trim().toLowerCase();
 
-    if (!cleanName || !cleanEmail || !password || !confirmPassword) {
+    if (!cleanFirstName || !cleanLastName || !cleanUsername || !cleanEmail || !password || !confirmPassword) {
       Alert.alert("Required Fields", "Please complete all fields.");
       return;
     }
@@ -38,11 +56,18 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (password.length < 6) {
+    const usernamePattern = /^[a-zA-Z0-9_-]+$/;
+    if (!usernamePattern.test(cleanUsername)) {
       Alert.alert(
-        "Invalid Password",
-        "Password must contain at least 6 characters."
+        "Invalid Username",
+        "Username can only contain letters, numbers, hyphens, and underscores."
       );
+      return;
+    }
+
+    const passwordProblem = getPasswordProblem(password);
+    if (passwordProblem) {
+      Alert.alert("Invalid Password", passwordProblem);
       return;
     }
 
@@ -54,14 +79,14 @@ export default function RegisterScreen() {
     setLoading(true);
 
     try {
-      await apiRequest("/register", {
-        method: "POST",
-        body: JSON.stringify({
-          name: cleanName,
-          email: cleanEmail,
-          password,
-          password_confirmation: confirmPassword,
-        }),
+      await register({
+        first_name: cleanFirstName,
+        last_name: cleanLastName,
+        username: cleanUsername,
+        email: cleanEmail,
+        role,
+        password,
+        password_confirmation: confirmPassword,
       });
 
       Alert.alert(
@@ -111,14 +136,45 @@ export default function RegisterScreen() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.label}>Full Name</Text>
+          <View style={styles.row}>
+            <View style={styles.half}>
+              <Text style={styles.label}>First Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="First name"
+                placeholderTextColor={COLORS.gray}
+                value={firstName}
+                onChangeText={setFirstName}
+                autoCapitalize="words"
+                editable={!loading}
+                returnKeyType="next"
+              />
+            </View>
+
+            <View style={styles.half}>
+              <Text style={styles.label}>Last Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Last name"
+                placeholderTextColor={COLORS.gray}
+                value={lastName}
+                onChangeText={setLastName}
+                autoCapitalize="words"
+                editable={!loading}
+                returnKeyType="next"
+              />
+            </View>
+          </View>
+
+          <Text style={styles.label}>Username</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your full name"
+            placeholder="Choose a username"
             placeholderTextColor={COLORS.gray}
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="words"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+            autoCorrect={false}
             editable={!loading}
             returnKeyType="next"
           />
@@ -137,6 +193,25 @@ export default function RegisterScreen() {
             returnKeyType="next"
           />
 
+          <Text style={styles.label}>I am a</Text>
+          <View style={styles.roleRow}>
+            {(["student", "teacher"] as Role[]).map((option) => {
+              const selected = role === option;
+              return (
+                <TouchableOpacity
+                  key={option}
+                  style={[styles.roleButton, selected && styles.roleButtonSelected]}
+                  onPress={() => setRole(option)}
+                  disabled={loading}
+                >
+                  <Text style={[styles.roleText, selected && styles.roleTextSelected]}>
+                    {option === "student" ? "Student" : "Teacher"}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
           <Text style={styles.label}>Password</Text>
           <TextInput
             style={styles.input}
@@ -148,6 +223,9 @@ export default function RegisterScreen() {
             editable={!loading}
             returnKeyType="next"
           />
+          <Text style={styles.hint}>
+            At least 8 characters, with one uppercase letter and one special character.
+          </Text>
 
           <Text style={styles.label}>Confirm Password</Text>
           <TextInput
@@ -236,6 +314,15 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
 
+  row: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+
+  half: {
+    flex: 1,
+  },
+
   label: {
     color: COLORS.text,
     fontSize: 13,
@@ -251,6 +338,43 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     color: COLORS.text,
     marginBottom: Spacing.md,
+  },
+
+  hint: {
+    color: COLORS.textSecondary,
+    fontSize: 11,
+    marginTop: -6,
+    marginBottom: Spacing.md,
+  },
+
+  roleRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+
+  roleButton: {
+    flex: 1,
+    height: 44,
+    borderWidth: 1,
+    borderColor: COLORS.maroon,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  roleButtonSelected: {
+    backgroundColor: COLORS.maroon,
+  },
+
+  roleText: {
+    color: COLORS.maroon,
+    fontWeight: "700",
+    fontSize: 13,
+  },
+
+  roleTextSelected: {
+    color: COLORS.white,
   },
 
   button: {

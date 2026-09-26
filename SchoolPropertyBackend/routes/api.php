@@ -1,84 +1,83 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\AdminMapController;
+use App\Http\Controllers\Api\AdminReportController;
+use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ComplaintController;
-use App\Http\Controllers\Api\AdminReportController;
-use App\Http\Controllers\Api\AdminRoomReportController;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\DamageReportController;
-use App\Http\Controllers\Api\ReportHistoryController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\MyReportsController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
-use App\Http\Controllers\Api\AdminMapController;
-use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\ReportHistoryController;
+use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Public routes
+|--------------------------------------------------------------------------
+*/
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::middleware('auth:sanctum')->group(function () {
+// Buildings + rooms for the "select location" list screen.
+Route::get('/locations', [LocationController::class, 'index']);
+
+/*
+|--------------------------------------------------------------------------
+| Authenticated routes (student, teacher, or admin)
+|--------------------------------------------------------------------------
+| "active" blocks any account an admin has banned.
+*/
+
+Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', function (\Illuminate\Http\Request $request) {
-    return response()->json([
-        'data' => $request->user(),
-    ]);
-});
 
-Route::patch('/user/profile', [ProfileController::class, 'update']);
+    Route::patch('/user/profile', [ProfileController::class, 'update']);
+    Route::post('/user/push-token', [ProfileController::class, 'updatePushToken']);
 
-   Route::middleware('auth:sanctum')->group(function () {
+    // Damage reports - submit and track your own.
+    Route::post('/reports', [DamageReportController::class, 'store']);
+    Route::get('/my/reports', [MyReportsController::class, 'index']);
+    Route::get('/my/reports/history', [ReportHistoryController::class, 'index']);
+    Route::get('/my/reports/{report}', [MyReportsController::class, 'show']);
+
+    // Complaints / feedback to the admin.
     Route::post('/complaints', [ComplaintController::class, 'store']);
-    Route::get('/admin/complaints', [ComplaintController::class, 'index']);
-    Route::get('/user', function (Request $request) {
-    return response()->json([
-        'data' => $request->user(),
-    ]);
-    
+
+    // In-app notification center.
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead']);
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead']);
 });
-});
-Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-    Route::get('/admin/map/counts',
-    [AdminMapController::class, 'counts']);
-    Route::get('/admin/map/room-reports', [AdminMapController::class, 'roomReports']);
-});
-Route::middleware('auth:sanctum')
+
+/*
+|--------------------------------------------------------------------------
+| Admin-only routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth:sanctum', 'active', 'admin'])
     ->prefix('admin')
     ->group(function () {
+        Route::get('/dashboard', [AdminDashboardController::class, 'index']);
+        Route::get('/campus-counts', [AdminDashboardController::class, 'campusCounts']);
+
         Route::get('/map/counts', [AdminMapController::class, 'counts']);
-        Route::get('/building-map/counts', [
-            AdminMapController::class,
-            'buildingCounts',
-        ]);
+        Route::get('/map/room-reports', [AdminMapController::class, 'roomReports']);
+        Route::get('/building-map/counts', [AdminMapController::class, 'buildingCounts']);
+
+        Route::get('/reports', [AdminReportController::class, 'index']);
+        Route::get('/reports/{report}', [AdminReportController::class, 'show']);
+        Route::patch('/reports/{report}', [AdminReportController::class, 'update']);
+
+        Route::get('/users', [AdminUserController::class, 'index']);
+        Route::patch('/users/{user}/ban', [AdminUserController::class, 'toggleBan']);
+        Route::delete('/users/{user}', [AdminUserController::class, 'destroy']);
+
+        Route::get('/complaints', [ComplaintController::class, 'index']);
     });
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
-    Route::get('/admin/building-counts', [AdminDashboardController::class, 'buildingCounts']);
-});
-Route::middleware('auth:sanctum')->get(
-    '/admin/campus-counts',
-    [AdminDashboardController::class, 'campusCounts']
-);
-
-Route::get('/admin/reports/{report}', [AdminReportController::class, 'show']);
-Route::patch('/admin/reports/{report}', [AdminReportController::class, 'update']);
-
-Route::get('/admin/reports', [AdminReportController::class, 'index']);
-Route::get('/admin/rooms/reports', [AdminRoomReportController::class, 'index']);
-Route::get('/me', function (Request $request) {
-    return response()->json([
-        'user' => $request->user(),
-    ]);
-});
-Route::get('/admin/users', [AdminUserController::class, 'index']);
-Route::middleware('auth:sanctum')->post(
-    '/reports',
-    [DamageReportController::class, 'store']
-);
-Route::get('/my/reports/history', [ReportHistoryController::class, 'index']);
-Route::get('/locations', [LocationController::class, 'index']);
-Route::get('/my/reports', [MyReportsController::class, 'index']);
-});

@@ -11,8 +11,14 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
 
+            // First/last name are what the registration form collects;
+            // "name" stays as the combined display name so existing
+            // relations (User::name) keep working everywhere else.
+            $table->string('first_name');
+            $table->string('last_name');
             $table->string('name');
 
+            $table->string('username')->unique();
             $table->string('email')->unique();
 
             $table->timestamp('email_verified_at')->nullable();
@@ -25,6 +31,14 @@ return new class extends Migration
                 'admin',
                 'maintenance',
             ])->default('student');
+
+            // Set by an admin to block a disruptive account without
+            // deleting its history of reports.
+            $table->boolean('is_banned')->default(false);
+
+            // Expo push token registered by the mobile app so the
+            // backend can send real push notifications to this device.
+            $table->string('expo_push_token')->nullable();
 
             $table->rememberToken();
 

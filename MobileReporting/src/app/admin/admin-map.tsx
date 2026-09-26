@@ -228,7 +228,7 @@ export default function AdminMap() {
 
   const openRoomReports = (building: Building, room: Room) => {
     router.push({
-      pathname: "/admin-room-reports",
+      pathname: "/admin/admin-room-reports",
       params: {
         buildingId: building.id,
         roomId: room.id,

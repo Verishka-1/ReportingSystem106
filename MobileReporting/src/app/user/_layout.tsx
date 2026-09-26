@@ -81,6 +81,7 @@ export default function UserTabsLayout() {
       <Tabs.Screen name="report-damage" options={{ href: null }} />
       <Tabs.Screen name="report-history" options={{ href: null }} />
       <Tabs.Screen name="building-map" options={{ href: null }} />
+      <Tabs.Screen name="report-details" options={{ href: null }} />
     </Tabs>
   );
 }

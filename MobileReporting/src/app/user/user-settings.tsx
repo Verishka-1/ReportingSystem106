@@ -4,19 +4,21 @@ import { router, useFocusEffect } from "expo-router";
 
 import { C } from "../../constants/palette";
 import { Page, Header, Card, Field, Button } from "../../components/Kit";
-import { apiRequest, logout } from "../../services/api";
+import { getMyProfile, logout, updateMyProfile } from "../../services/api";
 
 type Profile = {
   id: number;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  username: string | null;
+  username: string;
 };
 
 export default function UserSettings() {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [user, setUser] = useState("");
+  const [username, setUsername] = useState("");
   const [profile, setProfile] = useState<Profile | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -25,13 +27,13 @@ export default function UserSettings() {
 
   const loadProfile = useCallback(async () => {
     try {
-      const response = await apiRequest("/user");
-      const data = response?.data ?? response;
+      const data = await getMyProfile();
 
       setProfile(data);
-      setName(data?.name ?? "");
+      setFirstName(data?.first_name ?? "");
+      setLastName(data?.last_name ?? "");
       setEmail(data?.email ?? "");
-      setUser(data?.username ?? "");
+      setUsername(data?.username ?? "");
     } catch (error: any) {
       Alert.alert(
         "Could not load profile",
@@ -50,33 +52,34 @@ export default function UserSettings() {
   );
 
   const handleSave = async () => {
-    const cleanName = name.trim();
+    const cleanFirstName = firstName.trim();
+    const cleanLastName = lastName.trim();
     const cleanEmail = email.trim();
-    const cleanUser = user.trim();
+    const cleanUsername = username.trim();
 
-    if (!cleanName || !cleanEmail) {
-      Alert.alert("Missing information", "Enter your name and email.");
+    if (!cleanFirstName || !cleanLastName || !cleanEmail || !cleanUsername) {
+      Alert.alert(
+        "Missing information",
+        "Please fill in your first name, last name, username, and email."
+      );
       return;
     }
 
     setSaving(true);
 
     try {
-      const response = await apiRequest("/user/profile", {
-        method: "PATCH",
-        body: JSON.stringify({
-          name: cleanName,
-          email: cleanEmail,
-          username: cleanUser || null,
-        }),
+      const updated = await updateMyProfile({
+        first_name: cleanFirstName,
+        last_name: cleanLastName,
+        email: cleanEmail,
+        username: cleanUsername,
       });
 
-      const updated = response?.data ?? response;
-
       setProfile(updated);
-      setName(updated?.name ?? cleanName);
+      setFirstName(updated?.first_name ?? cleanFirstName);
+      setLastName(updated?.last_name ?? cleanLastName);
       setEmail(updated?.email ?? cleanEmail);
-      setUser(updated?.username ?? cleanUser);
+      setUsername(updated?.username ?? cleanUsername);
 
       Alert.alert("Profile updated", "Your account details have been saved.");
     } catch (error: any) {
@@ -95,7 +98,7 @@ export default function UserSettings() {
     setLoggingOut(true);
     try {
       await logout();
-      router.replace("/login");
+      router.replace("/login" as any);
     } catch (error: any) {
       Alert.alert(
         "Logout failed",
@@ -129,9 +132,22 @@ export default function UserSettings() {
         ) : (
           <>
             <Field
-              label="Full name"
-              value={name}
-              onChangeText={setName}
+              label="First name"
+              value={firstName}
+              onChangeText={setFirstName}
+            />
+
+            <Field
+              label="Last name"
+              value={lastName}
+              onChangeText={setLastName}
+            />
+
+            <Field
+              label="Username"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
             />
 
             <Field
@@ -139,12 +155,7 @@ export default function UserSettings() {
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
-            />
-
-            <Field
-              label="Username"
-              value={user}
-              onChangeText={setUser}
+              autoCapitalize="none"
             />
 
             <Text style={{ color: C.muted, fontSize: 11 }}>

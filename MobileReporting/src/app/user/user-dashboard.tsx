@@ -36,7 +36,6 @@ export default function UserDashboardScreen() {
       const response = await getMyProfile();
       setProfile(response?.data ?? response ?? null);
     } catch (error) {
-      // The dashboard remains usable even if the profile endpoint is unavailable.
       console.warn("Could not load user profile:", error);
     } finally {
       setProfileLoading(false);
@@ -106,7 +105,7 @@ export default function UserDashboardScreen() {
   };
 
   const goToReportForm = () => {
-    goToTab("/select-room");
+    goToTab("/user/select-room");
   };
 
   const goToTab = (path: string) => {
@@ -211,7 +210,7 @@ export default function UserDashboardScreen() {
           <View style={styles.activityCard}>
             <TouchableOpacity
               style={styles.activityRow}
-              onPress={() => goToTab("/user-reports")}
+              onPress={() => goToTab("/user/user-reports")}
               activeOpacity={0.75}
               accessibilityRole="button"
             >
@@ -265,7 +264,7 @@ export default function UserDashboardScreen() {
           <View style={styles.exploreGrid}>
             <TouchableOpacity
               style={styles.exploreCard}
-              onPress={() => goToTab("/campus-map")}
+              onPress={() => goToTab("/user/campus-map")}
               activeOpacity={0.8}
               accessibilityRole="button"
             >
@@ -281,7 +280,7 @@ export default function UserDashboardScreen() {
 
             <TouchableOpacity
               style={styles.exploreCard}
-              onPress={() => goToTab("/feedback")}
+              onPress={() => goToTab("/user/feedback")}
               activeOpacity={0.8}
               accessibilityRole="button"
             >
@@ -332,7 +331,7 @@ export default function UserDashboardScreen() {
           {/* Account shortcut */}
           <TouchableOpacity
             style={styles.settingsShortcut}
-            onPress={() => goToTab("/user-settings")}
+            onPress={() => goToTab("/user/user-settings")}
             activeOpacity={0.8}
             accessibilityRole="button"
           >

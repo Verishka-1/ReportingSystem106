@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Text,
   TextInput,
   View,
@@ -9,13 +10,14 @@ import {
 
 import { C } from "../../constants/palette";
 import { Page, Header, Card } from "../../components/Kit";
-import { apiRequest } from "../../services/api";
+import { deleteUser, getAdminUsers, toggleBanUser } from "../../services/api";
 
 type UserAccount = {
   id: number;
   name: string;
   email: string;
   role: string;
+  is_banned: boolean;
 };
 
 function initials(name: string) {
@@ -39,13 +41,7 @@ export default function AdminUsers() {
     setError("");
 
     try {
-      const result = await apiRequest("/admin/users");
-      const rows = Array.isArray(result)
-        ? result
-        : Array.isArray(result?.data)
-          ? result.data
-          : [];
-
+      const rows = await getAdminUsers();
       setUsers(rows);
     } catch (err) {
       setError(
@@ -71,10 +67,70 @@ export default function AdminUsers() {
     );
   }, [users, search]);
 
-  const showManagePreview = (user: UserAccount) => {
+  const handleBanToggle = async (user: UserAccount) => {
+    try {
+      await toggleBanUser(user.id);
+      await loadUsers();
+    } catch (err) {
+      Alert.alert(
+        "Action failed",
+        err instanceof Error ? err.message : "Could not update this account."
+      );
+    }
+  };
+
+  const handleDelete = (user: UserAccount) => {
     Alert.alert(
-      "Manage account",
-      `${user.name}\n${user.email}\nRole: ${user.role}\n\nAccount actions are not connected yet.`
+      "Delete account",
+      `This permanently deletes ${user.name}'s account. This cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteUser(user.id);
+              await loadUsers();
+            } catch (err) {
+              Alert.alert(
+                "Delete failed",
+                err instanceof Error ? err.message : "Could not delete this account."
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleEmail = (user: UserAccount) => {
+    Linking.openURL(`mailto:${user.email}`).catch(() => {
+      Alert.alert(
+        "Could not open email",
+        "No email app appears to be available on this device."
+      );
+    });
+  };
+
+  const showManageOptions = (user: UserAccount) => {
+    if (user.role === "admin") {
+      Alert.alert("Administrator account", "The admin account cannot be managed from here.");
+      return;
+    }
+
+    Alert.alert(
+      user.name,
+      `${user.email}\nRole: ${user.role}\nStatus: ${user.is_banned ? "Banned" : "Active"}`,
+      [
+        { text: "Email user", onPress: () => handleEmail(user) },
+        {
+          text: user.is_banned ? "Unban user" : "Ban user",
+          onPress: () => handleBanToggle(user),
+        },
+        { text: "Delete account", style: "destructive", onPress: () => handleDelete(user) },
+        { text: "Cancel", style: "cancel" },
+      ]
     );
   };
 
@@ -174,11 +230,12 @@ export default function AdminUsers() {
                 }}
               >
                 {user.role} · {user.email}
+                {user.is_banned ? " · BANNED" : ""}
               </Text>
             </View>
 
             <Text
-              onPress={() => showManagePreview(user)}
+              onPress={() => showManageOptions(user)}
               accessibilityRole="button"
               style={{ color: C.maroon, fontWeight: "800", marginLeft: 8 }}
             >

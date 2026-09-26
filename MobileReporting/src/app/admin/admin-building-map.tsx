@@ -142,7 +142,7 @@ export default function AdminBuildingMapScreen() {
 
   const handleRoomPress = (roomName: string) => {
     router.push({
-      pathname: "/admin-room-reports",
+      pathname: "/admin/admin-room-reports",
       params: {
         building: selectedBuildingId,
         location: roomName,

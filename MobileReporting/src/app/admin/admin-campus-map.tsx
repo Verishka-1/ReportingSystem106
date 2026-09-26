@@ -411,7 +411,7 @@ export default function AdminCampusMapScreen() {
       hotspot.id === "oldBuilding"
     ) {
       router.push({
-        pathname: "/admin-building-map",
+        pathname: "/admin/admin-building-map",
         params: {
           building: hotspot.id,
         },
@@ -422,7 +422,7 @@ export default function AdminCampusMapScreen() {
 
     // Other campus locations open the general location reports screen.
     router.push({
-      pathname: "/admin-room-reports",
+      pathname: "/admin/admin-room-reports",
       params: {
         location: hotspot.name,
         locationId: hotspot.id,

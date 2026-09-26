@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -12,9 +13,12 @@ import {
   View,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 
 import { COLORS, Spacing } from "../../constants/theme";
-import { apiRequest } from "../../services/api";
+import { submitReport } from "../../services/api";
+
+const MAX_PHOTOS = 5;
 
 export default function ReportDamageScreen() {
   const params = useLocalSearchParams<{
@@ -38,10 +42,46 @@ export default function ReportDamageScreen() {
   );
 
   const [description, setDescription] = useState("");
+  const [photos, setPhotos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const chooseLocation = () => {
-    router.push("/campus-map" as any);
+    router.push("/user/campus-map" as any);
+  };
+
+  const addPhotoFrom = async (source: "camera" | "gallery") => {
+    if (photos.length >= MAX_PHOTOS) {
+      Alert.alert("Photo limit reached", `You can attach up to ${MAX_PHOTOS} photos.`);
+      return;
+    }
+
+    const permission =
+      source === "camera"
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        "Permission needed",
+        source === "camera"
+          ? "Camera access is required to take a photo of the damage."
+          : "Photo library access is required to attach a photo."
+      );
+      return;
+    }
+
+    const result =
+      source === "camera"
+        ? await ImagePicker.launchCameraAsync({ quality: 0.7 })
+        : await ImagePicker.launchImageLibraryAsync({ quality: 0.7 });
+
+    if (!result.canceled && result.assets?.length) {
+      setPhotos((current) => [...current, result.assets[0].uri]);
+    }
+  };
+
+  const removePhoto = (uri: string) => {
+    setPhotos((current) => current.filter((item) => item !== uri));
   };
 
   const handleSubmit = async () => {
@@ -66,13 +106,11 @@ export default function ReportDamageScreen() {
     setSubmitting(true);
 
     try {
-      await apiRequest("/reports", {
-        method: "POST",
-        body: JSON.stringify({
-          building_name: selectedBuildingName || selectedBuilding,
-          room_name: selectedRoomName || selectedRoom,
-          description: cleanDescription,
-        }),
+      await submitReport({
+        building_name: selectedBuildingName || selectedBuilding,
+        room_name: selectedRoomName || selectedRoom,
+        description: cleanDescription,
+        photoUris: photos,
       });
 
       Alert.alert(
@@ -81,7 +119,7 @@ export default function ReportDamageScreen() {
         [
           {
             text: "OK",
-            onPress: () => router.replace("/user-dashboard" as any),
+            onPress: () => router.replace("/user/user-dashboard" as any),
           },
         ]
       );
@@ -162,6 +200,46 @@ export default function ReportDamageScreen() {
               </Text>
             </View>
           )}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Photos</Text>
+          <Text style={styles.sectionDescription}>
+            Attach up to {MAX_PHOTOS} photos of the damage (optional, but recommended).
+          </Text>
+
+          <View style={styles.photoRow}>
+            {photos.map((uri) => (
+              <View key={uri} style={styles.photoWrapper}>
+                <Image source={{ uri }} style={styles.photoThumb} />
+                <TouchableOpacity
+                  style={styles.removePhotoButton}
+                  onPress={() => removePhoto(uri)}
+                  disabled={submitting}
+                >
+                  <Text style={styles.removePhotoText}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.photoActionsRow}>
+            <TouchableOpacity
+              style={[styles.photoActionButton, submitting && styles.submitButtonDisabled]}
+              onPress={() => addPhotoFrom("camera")}
+              disabled={submitting || photos.length >= MAX_PHOTOS}
+            >
+              <Text style={styles.photoActionText}>Take Photo</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.photoActionButton, styles.photoActionOutline]}
+              onPress={() => addPhotoFrom("gallery")}
+              disabled={submitting || photos.length >= MAX_PHOTOS}
+            >
+              <Text style={styles.photoActionOutlineText}>Choose from Gallery</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.card}>
@@ -339,6 +417,75 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontSize: 12,
     textAlign: "center",
+  },
+
+  photoRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginBottom: Spacing.md,
+  },
+
+  photoWrapper: {
+    position: "relative",
+  },
+
+  photoThumb: {
+    width: 84,
+    height: 84,
+    borderRadius: 10,
+    backgroundColor: "#F0ECEE",
+  },
+
+  removePhotoButton: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: COLORS.maroon,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  removePhotoText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "800",
+    marginTop: -1,
+  },
+
+  photoActionsRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+
+  photoActionButton: {
+    flex: 1,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: COLORS.maroon,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  photoActionOutline: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.maroon,
+  },
+
+  photoActionText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  photoActionOutlineText: {
+    color: COLORS.maroon,
+    fontSize: 12,
+    fontWeight: "700",
   },
 
   descriptionInput: {
