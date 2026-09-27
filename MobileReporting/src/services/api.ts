@@ -1,6 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 
-const API_URL = "http://192.168.1.7:8000/api"; // i change and ip address diri if lahi ang wifi nimo, adto cmd then ipconfig, pangitaa ipv4
+const API_URL = "http://172.20.10.2:8000/api"; // i change and ip address diri if lahi ang wifi nimo, adto cmd then ipconfig, pangitaa ipv4
 
 
 export async function apiRequest(
