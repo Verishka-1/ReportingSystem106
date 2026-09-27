@@ -8,7 +8,11 @@ import {
   Text,
   View,
 } from "react-native";
-import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import {
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+} from "expo-router";
 
 import { COLORS, Spacing } from "../../constants/theme";
 import { apiRequest } from "../../services/api";
@@ -28,59 +32,154 @@ type Building = {
 };
 
 type BuildingMapResponse = {
+  // The API should return counts keyed by room name, e.g. "B1 309": 2.
   room_counts?: Record<string, number>;
+  room_counts_by_name?: Record<string, number>;
 };
 
 const BUILDINGS: Record<string, Building> = {
   building1: {
     title: "Building 1",
     floors: [
-      { name: "3rd Floor", rooms: [{ name: "Br202" }, { name: "Br201" }, { name: "Br200" }] },
-      { name: "2nd Floor", rooms: [{ name: "Br103" }, { name: "Br102" }, { name: "Br101" }] },
-      { name: "1st Floor", rooms: [{ name: "Br010" }, { name: "Br011" }, { name: "Br012" }] },
+      {
+        name: "3rd Floor",
+        rooms: ["B1 309", "B1 310", "B1 311", "B1 312"].map((name) => ({
+          name,
+        })),
+      },
+      {
+        name: "2nd Floor",
+        rooms: ["B1 205", "B1 206", "B1 207", "B1 208"].map((name) => ({
+          name,
+        })),
+      },
+      {
+        name: "1st Floor",
+        rooms: ["B1 101", "B1 102", "B1 103", "B1 104"].map((name) => ({
+          name,
+        })),
+      },
     ],
   },
+
   building2: {
     title: "Building 2",
     floors: [
       {
         name: "3rd Floor",
-        rooms: ["Br312", "Br313", "Br314", "Br315", "Br316", "Br317"].map((name) => ({ name })),
+        rooms: [
+          "B2 313",
+          "B2 314",
+          "B2 315",
+          "B2 316",
+          "B2 317",
+          "B2 318",
+        ].map((name) => ({ name })),
       },
       {
         name: "2nd Floor",
-        rooms: ["Br211", "Br210", "Br209", "Br208", "Br207", "Br206"].map((name) => ({ name })),
+        rooms: [
+          "B2 212",
+          "B2 211",
+          "B2 210",
+          "B2 209",
+          "B2 208",
+          "B2 207",
+        ].map((name) => ({ name })),
       },
       {
         name: "1st Floor",
-        rooms: ["Br111", "Br110", "Br109", "Br108", "Br107", "Br106"].map((name) => ({ name })),
+        rooms: [
+          "B2 101",
+          "B2 102",
+          "B2 103",
+          "B2 104",
+          "B2 105",
+          "B2 106",
+        ].map((name) => ({ name })),
       },
     ],
   },
+
   buildingCR: {
     title: "Building CRs",
     floors: [
-      { name: "3rd Floor", rooms: [{ name: "Female CR3" }, { name: "Male CR3" }] },
-      { name: "2nd Floor", rooms: [{ name: "Female CR2" }, { name: "Male CR2" }] },
-      { name: "1st Floor", rooms: [{ name: "Female CR1" }, { name: "Male CR1" }] },
+      {
+        name: "3rd Floor",
+        rooms: [{ name: "Female CR3" }, { name: "Male CR3" }],
+      },
+      {
+        name: "2nd Floor",
+        rooms: [{ name: "Female CR2" }, { name: "Male CR2" }],
+      },
+      {
+        name: "1st Floor",
+        rooms: [{ name: "Female CR1" }, { name: "Male CR1" }],
+      },
     ],
   },
+
   oldBuilding: {
     title: "Old Building",
     floors: [
-      { name: "3rd Floor", rooms: [{ name: "Rv302" }, { name: "Rv301" }, { name: "AVR" }] },
-      { name: "2nd Floor", rooms: [{ name: "ComLab2" }, { name: "ComLab1" }, { name: "ComLab3" }] },
-      { name: "1st Floor", rooms: [{ name: "ElectricalLab" }, { name: "EngineeringLab" }] },
+      {
+        name: "3rd Floor",
+        rooms: [{ name: "Rv302" }, { name: "Rv301" }, { name: "AVR" }],
+      },
+      {
+        name: "2nd Floor",
+        rooms: [
+          { name: "ComLab2" },
+          { name: "ComLab1" },
+          { name: "ComLab3" },
+        ],
+      },
+      {
+        name: "1st Floor",
+        rooms: [
+          { name: "ElectricalLab" },
+          { name: "EngineeringLab" },
+        ],
+      },
     ],
   },
 };
 
-function normalizeRoomName(name: string) {
-  return name.trim().toLowerCase().replace(/\s+/g, "");
+/**
+ * Replace these example IDs with the actual building IDs in your Laravel DB.
+ * They must correspond to the building records used by /admin/building-counts.
+ */
+const BUILDING_DATABASE_IDS: Record<string, number> = {
+  building1: 1,
+  building2: 2,
+  oldBuilding: 3,
+  buildingCR: 4,
+};
+
+function normalizeRoomName(name: string): string {
+  return name.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function normalizeRoomCounts(
+  response: BuildingMapResponse
+): Record<string, number> {
+  const source =
+    response.room_counts_by_name ??
+    response.room_counts ??
+    {};
+
+  const normalized: Record<string, number> = {};
+
+  Object.entries(source).forEach(([roomName, count]) => {
+    normalized[normalizeRoomName(roomName)] = Number(count) || 0;
+  });
+
+  return normalized;
 }
 
 export default function AdminBuildingMapScreen() {
   const { building } = useLocalSearchParams<{ building?: string }>();
+
   const buildingId = Array.isArray(building) ? building[0] : building;
   const selectedBuildingId = buildingId || "building1";
   const selectedBuilding = BUILDINGS[selectedBuildingId];
@@ -93,7 +192,20 @@ export default function AdminBuildingMapScreen() {
   const loadRoomCounts = useCallback(async () => {
     if (!selectedBuilding) {
       setLoading(false);
-      setError("Unknown building.");
+      setRefreshing(false);
+      setError("Unknown building. Return to the campus map and select a building.");
+      return;
+    }
+
+    const databaseBuildingId =
+      BUILDING_DATABASE_IDS[selectedBuildingId];
+
+    if (typeof databaseBuildingId !== "number") {
+      setLoading(false);
+      setRefreshing(false);
+      setError(
+        "This building has no database ID configured. Update BUILDING_DATABASE_IDS in admin-building-map.tsx."
+      );
       return;
     }
 
@@ -101,15 +213,17 @@ export default function AdminBuildingMapScreen() {
       setError("");
 
       const response = (await apiRequest(
-        `/admin/building-map/counts?building=${encodeURIComponent(selectedBuildingId)}`
+        `/admin/building-counts?building_id=${databaseBuildingId}`
       )) as BuildingMapResponse;
 
-      setRoomCounts(response?.room_counts ?? {});
+      setRoomCounts(normalizeRoomCounts(response ?? {}));
     } catch (err) {
+      console.error("Failed to load room report counts:", err);
+
       setError(
         err instanceof Error
           ? err.message
-          : "Could not load room report counts."
+          : "Could not load room report counts. Please try again."
       );
     } finally {
       setLoading(false);
@@ -124,18 +238,19 @@ export default function AdminBuildingMapScreen() {
     }, [loadRoomCounts])
   );
 
-  const getRoomCount = (roomName: string) => {
-    const matchingKey = Object.keys(roomCounts).find(
-      (key) => normalizeRoomName(key) === normalizeRoomName(roomName)
-    );
-
-    return matchingKey ? Number(roomCounts[matchingKey]) || 0 : 0;
+  const getRoomCount = (roomName: string): number => {
+    return roomCounts[normalizeRoomName(roomName)] ?? 0;
   };
 
   const totalReports = selectedBuilding
     ? selectedBuilding.floors.reduce(
         (total, floor) =>
-          total + floor.rooms.reduce((floorTotal, room) => floorTotal + getRoomCount(room.name), 0),
+          total +
+          floor.rooms.reduce(
+            (floorTotal, room) =>
+              floorTotal + getRoomCount(room.name),
+            0
+          ),
         0
       )
     : 0;
@@ -161,13 +276,21 @@ export default function AdminBuildingMapScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Pressable
+            onPress={() => router.back()}
+            style={styles.backButton}
+            hitSlop={8}
+          >
             <Text style={styles.backText}>‹</Text>
           </Pressable>
+
           <Text style={styles.title}>Building Map</Text>
         </View>
+
         <View style={styles.centerMessage}>
-          <Text style={styles.errorText}>Unknown building. Return to the campus map and select a building.</Text>
+          <Text style={styles.errorText}>
+            Unknown building. Return to the campus map and select a building.
+          </Text>
         </View>
       </View>
     );
@@ -175,23 +298,29 @@ export default function AdminBuildingMapScreen() {
 
   return (
     <View style={styles.container}>
+      {/* HEADER */}
       <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
           style={styles.backButton}
           hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           <Text style={styles.backText}>‹</Text>
         </Pressable>
 
         <View style={styles.headerText}>
           <Text style={styles.title}>{selectedBuilding.title}</Text>
-          <Text style={styles.subtitle}>Tap a room to view its damage reports</Text>
+          <Text style={styles.subtitle}>
+            Tap a room to view its damage reports
+          </Text>
         </View>
 
         <Pressable
           onPress={handleRefresh}
           style={styles.refreshButton}
+          disabled={loading}
           accessibilityRole="button"
           accessibilityLabel="Refresh report counts"
         >
@@ -199,30 +328,42 @@ export default function AdminBuildingMapScreen() {
         </Pressable>
       </View>
 
+      {/* BUILDING SUMMARY */}
       <View style={styles.summary}>
         <View>
-          <Text style={styles.summaryLabel}>Total reports in building</Text>
+          <Text style={styles.summaryLabel}>
+            Total reports in building
+          </Text>
           <Text style={styles.summaryCount}>
             {loading ? "…" : totalReports}
           </Text>
         </View>
-        {loading && <ActivityIndicator color={COLORS.maroon} />}
+
+        {loading ? (
+          <ActivityIndicator color={COLORS.maroon} />
+        ) : null}
       </View>
 
+      {/* ERROR MESSAGE */}
       {error ? (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>{error}</Text>
-          <Pressable onPress={handleRefresh}>
+
+          <Pressable onPress={handleRefresh} disabled={loading}>
             <Text style={styles.retryText}>Try again</Text>
           </Pressable>
         </View>
       ) : null}
 
+      {/* FLOORS AND ROOMS */}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+          />
         }
       >
         {selectedBuilding.floors.map((floor) => (
@@ -242,6 +383,8 @@ export default function AdminBuildingMapScreen() {
                       count > 0 && styles.roomCardWithReports,
                       pressed && styles.roomCardPressed,
                     ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${room.name}, ${count} reports. View reports`}
                   >
                     <Text style={styles.roomName}>{room.name}</Text>
 
@@ -264,7 +407,10 @@ export default function AdminBuildingMapScreen() {
                     <Text style={styles.reportLabel}>
                       {count === 1 ? "report" : "reports"}
                     </Text>
-                    <Text style={styles.tapHint}>View reports ›</Text>
+
+                    <Text style={styles.tapHint}>
+                      View reports ›
+                    </Text>
                   </Pressable>
                 );
               })}
@@ -273,6 +419,7 @@ export default function AdminBuildingMapScreen() {
         ))}
       </ScrollView>
 
+      {/* FOOTER */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>
           Room counts show saved reports for this building.
@@ -287,6 +434,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.lighterMaroon,
   },
+
   header: {
     backgroundColor: COLORS.white,
     paddingHorizontal: Spacing.lg,
@@ -297,6 +445,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
+
   backButton: {
     width: 42,
     height: 42,
@@ -306,36 +455,44 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 12,
   },
+
   backText: {
     color: COLORS.white,
     fontSize: 30,
     lineHeight: 32,
     marginTop: -3,
   },
+
   headerText: {
     flex: 1,
   },
+
   title: {
     color: COLORS.maroon,
     fontSize: 20,
     fontWeight: "800",
   },
+
   subtitle: {
     color: COLORS.textSecondary,
     fontSize: 11,
     marginTop: 2,
   },
+
   refreshButton: {
     paddingHorizontal: 12,
     paddingVertical: 9,
     borderRadius: 8,
     backgroundColor: COLORS.lighterMaroon,
+    marginLeft: 8,
   },
+
   refreshText: {
     color: COLORS.maroon,
     fontSize: 12,
     fontWeight: "700",
   },
+
   summary: {
     margin: 12,
     padding: 14,
@@ -345,23 +502,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+
   summaryLabel: {
     color: COLORS.textSecondary,
     fontSize: 12,
   },
+
   summaryCount: {
     color: COLORS.maroon,
     fontSize: 24,
     fontWeight: "800",
     marginTop: 3,
   },
+
   scroll: {
     flex: 1,
   },
+
   scrollContent: {
     paddingHorizontal: 12,
     paddingBottom: 18,
   },
+
   floorSection: {
     backgroundColor: COLORS.white,
     borderRadius: 10,
@@ -370,6 +532,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
+
   floorTitle: {
     color: COLORS.maroon,
     fontSize: 15,
@@ -377,12 +540,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 14,
   },
+
   roomsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "flex-start",
     gap: 10,
   },
+
   roomCard: {
     width: "31%",
     minHeight: 112,
@@ -394,13 +559,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
   },
+
   roomCardWithReports: {
     borderColor: COLORS.maroon,
     backgroundColor: "#FFF5F5",
   },
+
   roomCardPressed: {
     opacity: 0.75,
   },
+
   roomName: {
     color: COLORS.text,
     fontSize: 13,
@@ -408,6 +576,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 8,
   },
+
   countBadge: {
     minWidth: 28,
     height: 28,
@@ -417,28 +586,34 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   countBadgeActive: {
     backgroundColor: COLORS.maroon,
   },
+
   countText: {
     color: "#333333",
     fontSize: 13,
     fontWeight: "800",
   },
+
   countTextActive: {
     color: "#FFFFFF",
   },
+
   reportLabel: {
     color: COLORS.textSecondary,
     fontSize: 10,
     marginTop: 4,
   },
+
   tapHint: {
     color: COLORS.maroon,
     fontSize: 10,
     fontWeight: "600",
     marginTop: 5,
   },
+
   footer: {
     paddingVertical: 10,
     paddingHorizontal: 16,
@@ -446,11 +621,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
+
   footerText: {
     color: COLORS.textSecondary,
     fontSize: 10,
     textAlign: "center",
   },
+
   errorBanner: {
     marginHorizontal: 12,
     marginBottom: 10,
@@ -458,16 +635,19 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "#FFF0F0",
   },
+
   errorText: {
     color: "#A00000",
     fontSize: 12,
   },
+
   retryText: {
     color: COLORS.maroon,
     fontSize: 12,
     fontWeight: "800",
     marginTop: 6,
   },
+
   centerMessage: {
     flex: 1,
     alignItems: "center",

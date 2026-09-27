@@ -9,15 +9,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class DamageReport extends Model
 {
     protected $fillable = [
-        'report_number',
-        'user_id',
-        'title',
-        'building_name',
-        'room_name',
-        'description',
-        'status',
-        'priority',
-    ];
+    'report_number',
+    'user_id',
+    'building_id',
+    'room_id',
+    'property_name',
+    'description',
+    'priority',
+    'status',
+    'reported_at',
+];
 
     public function user(): BelongsTo
     {

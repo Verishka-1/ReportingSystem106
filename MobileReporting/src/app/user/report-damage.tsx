@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -20,30 +20,50 @@ import { submitReport } from "../../services/api";
 
 const MAX_PHOTOS = 5;
 
+type RouteParam = string | string[] | undefined;
+
+const getParam = (value: RouteParam): string => {
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+};
+
 export default function ReportDamageScreen() {
   const params = useLocalSearchParams<{
-    building?: string;
-    buildingName?: string;
-    room?: string;
-    roomName?: string;
+    building?: string | string[];
+    buildingName?: string | string[];
+    room?: string | string[];
+    roomName?: string | string[];
   }>();
 
-  const [selectedBuilding, setSelectedBuilding] = useState(
-    typeof params.building === "string" ? params.building : ""
+  // IDs are kept separate from the names shown to the user.
+  const [selectedBuilding, setSelectedBuilding] = useState(() =>
+    getParam(params.building)
   );
-  const [selectedRoom, setSelectedRoom] = useState(
-    typeof params.room === "string" ? params.room : ""
+  const [selectedRoom, setSelectedRoom] = useState(() =>
+    getParam(params.room)
   );
-  const [selectedBuildingName, setSelectedBuildingName] = useState(
-    typeof params.buildingName === "string" ? params.buildingName : ""
+  const [selectedBuildingName, setSelectedBuildingName] = useState(() =>
+    getParam(params.buildingName)
   );
-  const [selectedRoomName, setSelectedRoomName] = useState(
-    typeof params.roomName === "string" ? params.roomName : ""
+  const [selectedRoomName, setSelectedRoomName] = useState(() =>
+    getParam(params.roomName)
   );
 
   const [description, setDescription] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // Refresh the selected location when the map sends new route parameters.
+  useEffect(() => {
+    setSelectedBuilding(getParam(params.building));
+    setSelectedRoom(getParam(params.room));
+    setSelectedBuildingName(getParam(params.buildingName));
+    setSelectedRoomName(getParam(params.roomName));
+  }, [
+    params.building,
+    params.buildingName,
+    params.room,
+    params.roomName,
+  ]);
 
   const chooseLocation = () => {
     router.push("/user/campus-map" as any);
@@ -51,32 +71,52 @@ export default function ReportDamageScreen() {
 
   const addPhotoFrom = async (source: "camera" | "gallery") => {
     if (photos.length >= MAX_PHOTOS) {
-      Alert.alert("Photo limit reached", `You can attach up to ${MAX_PHOTOS} photos.`);
-      return;
-    }
-
-    const permission =
-      source === "camera"
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permission.granted) {
       Alert.alert(
-        "Permission needed",
-        source === "camera"
-          ? "Camera access is required to take a photo of the damage."
-          : "Photo library access is required to attach a photo."
+        "Photo limit reached",
+        `You can attach up to ${MAX_PHOTOS} photos.`
       );
       return;
     }
 
-    const result =
-      source === "camera"
-        ? await ImagePicker.launchCameraAsync({ quality: 0.3 })
-        : await ImagePicker.launchImageLibraryAsync({ quality: 0.3 });
+    try {
+      const permission =
+        source === "camera"
+          ? await ImagePicker.requestCameraPermissionsAsync()
+          : await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (!result.canceled && result.assets?.length) {
-      setPhotos((current) => [...current, result.assets[0].uri]);
+      if (!permission.granted) {
+        Alert.alert(
+          "Permission needed",
+          source === "camera"
+            ? "Camera access is required to take a photo of the damage."
+            : "Photo library access is required to attach a photo."
+        );
+        return;
+      }
+
+      const result =
+        source === "camera"
+          ? await ImagePicker.launchCameraAsync({ quality: 0.3 })
+          : await ImagePicker.launchImageLibraryAsync({ quality: 0.3 });
+
+      if (!result.canceled && result.assets?.length) {
+        const pickedUri = result.assets[0].uri;
+
+        setPhotos((current) => {
+          if (current.length >= MAX_PHOTOS) {
+            return current;
+          }
+
+          return [...current, pickedUri];
+        });
+      }
+    } catch (error) {
+      Alert.alert(
+        "Photo error",
+        error instanceof Error
+          ? error.message
+          : "Could not open the camera or photo library."
+      );
     }
   };
 
@@ -89,6 +129,14 @@ export default function ReportDamageScreen() {
       Alert.alert(
         "Location Required",
         "Please select the building and room where the damage occurred."
+      );
+      return;
+    }
+
+    if (!selectedBuildingName || !selectedRoomName) {
+      Alert.alert(
+        "Location Name Missing",
+        "Please select the location again from the map so its building and room names are included."
       );
       return;
     }
@@ -107,8 +155,8 @@ export default function ReportDamageScreen() {
 
     try {
       await submitReport({
-        building_name: selectedBuildingName || selectedBuilding,
-        room_name: selectedRoomName || selectedRoom,
+        building_name: selectedBuildingName,
+        room_name: selectedRoomName,
         description: cleanDescription,
         photoUris: photos,
       });
@@ -119,7 +167,8 @@ export default function ReportDamageScreen() {
         [
           {
             text: "OK",
-            onPress: () => router.replace("/user/user-dashboard" as any),
+            onPress: () =>
+              router.replace("/user/user-dashboard" as any),
           },
         ]
       );
@@ -183,14 +232,16 @@ export default function ReportDamageScreen() {
 
           {selectedBuilding && selectedRoom ? (
             <View style={styles.selectedLocation}>
-              <Text style={styles.selectedLabel}>Selected Location</Text>
+              <Text style={styles.selectedLabel}>
+                Selected Location
+              </Text>
 
               <Text style={styles.selectedLocationText}>
-                {selectedBuildingName || selectedBuilding}
+                {selectedBuildingName || "Selected building"}
               </Text>
 
               <Text style={styles.selectedRoomText}>
-                Room {selectedRoomName || selectedRoom}
+                {selectedRoomName || "Room name unavailable"}
               </Text>
             </View>
           ) : (
@@ -204,14 +255,20 @@ export default function ReportDamageScreen() {
 
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Photos</Text>
+
           <Text style={styles.sectionDescription}>
-            Attach up to {MAX_PHOTOS} photos of the damage (optional, but recommended).
+            Attach up to {MAX_PHOTOS} photos of the damage (optional, but
+            recommended).
           </Text>
 
           <View style={styles.photoRow}>
             {photos.map((uri) => (
               <View key={uri} style={styles.photoWrapper}>
-                <Image source={{ uri }} style={styles.photoThumb} />
+                <Image
+                  source={{ uri }}
+                  style={styles.photoThumb}
+                />
+
                 <TouchableOpacity
                   style={styles.removePhotoButton}
                   onPress={() => removePhoto(uri)}
@@ -225,7 +282,10 @@ export default function ReportDamageScreen() {
 
           <View style={styles.photoActionsRow}>
             <TouchableOpacity
-              style={[styles.photoActionButton, submitting && styles.submitButtonDisabled]}
+              style={[
+                styles.photoActionButton,
+                submitting && styles.submitButtonDisabled,
+              ]}
               onPress={() => addPhotoFrom("camera")}
               disabled={submitting || photos.length >= MAX_PHOTOS}
             >
@@ -233,17 +293,24 @@ export default function ReportDamageScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.photoActionButton, styles.photoActionOutline]}
+              style={[
+                styles.photoActionButton,
+                styles.photoActionOutline,
+              ]}
               onPress={() => addPhotoFrom("gallery")}
               disabled={submitting || photos.length >= MAX_PHOTOS}
             >
-              <Text style={styles.photoActionOutlineText}>Choose from Gallery</Text>
+              <Text style={styles.photoActionOutlineText}>
+                Choose from Gallery
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Damage Description</Text>
+          <Text style={styles.sectionTitle}>
+            Damage Description
+          </Text>
 
           <Text style={styles.sectionDescription}>
             Briefly describe what is damaged.

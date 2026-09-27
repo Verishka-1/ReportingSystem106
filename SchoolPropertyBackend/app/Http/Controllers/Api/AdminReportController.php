@@ -7,6 +7,8 @@ use App\Models\DamageReport;
 use App\Support\PushNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Http\JsonResponse;
 
 /**
  * Admin-only report review. Route-level "admin" middleware already
@@ -24,38 +26,58 @@ class AdminReportController extends Controller
     /**
      * GET /api/admin/reports?status=pending&building=Building 1
      */
-    public function index(Request $request)
-    {
-        $validated = $request->validate([
-            'status' => ['nullable', 'string'],
-            'building' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        $reports = DamageReport::query()
-            ->when(
-                !empty($validated['status']),
-                fn ($query) => $query->where('status', $validated['status'])
-            )
-            ->when(
-                !empty($validated['building']),
-                fn ($query) => $query->where('building_name', $validated['building'])
-            )
-            ->with('user:id,name,email')
-            ->latest()
-            ->get([
-                'id',
-                'report_number',
-                'title',
-                'building_name',
-                'room_name',
-                'status',
-                'priority',
-                'user_id',
-                'created_at',
-            ]);
-
-        return response()->json(['data' => $reports]);
+   public function index(Request $request): JsonResponse
+{
+    if (!$request->user() || $request->user()->role !== 'admin') {
+        return response()->json([
+            'message' => 'Unauthorized. Admin access required.',
+        ], 403);
     }
+
+    $reports = DB::table('damage_reports as dr')
+        ->leftJoin('buildings as b', 'b.id', '=', 'dr.building_id')
+        ->leftJoin('rooms as r', 'r.id', '=', 'dr.room_id')
+        ->leftJoin('users as u', 'u.id', '=', 'dr.user_id')
+        ->orderByDesc('dr.created_at')
+        ->select([
+            'dr.id',
+            'dr.report_number',
+            'dr.property_name',
+            'dr.status',
+            'dr.priority',
+            'dr.user_id',
+            'dr.description',
+            'dr.created_at',
+            'b.name as building_name',
+            'r.name as room_name',
+            'u.name as reporter_name',
+            'u.email as reporter_email',
+        ])
+        ->get()
+        ->map(function ($report) {
+            return [
+                'id' => $report->id,
+                'report_number' => $report->report_number,
+                'title' => $report->property_name ?: 'Damage report',
+                'building_name' => $report->building_name ?? 'Unknown building',
+                'room_name' => $report->room_name ?? 'Unknown room',
+                'description' => $report->description,
+                'status' => $report->status,
+                'priority' => $report->priority,
+                'user_id' => $report->user_id,
+                'created_at' => $report->created_at,
+                'user' => [
+                    'name' => $report->reporter_name,
+                    'email' => $report->reporter_email,
+                ],
+            ];
+        });
+
+    return response()->json([
+        'message' => 'Reports loaded successfully.',
+        'data' => $reports,
+    ]);
+}
 
     public function show(DamageReport $report)
     {

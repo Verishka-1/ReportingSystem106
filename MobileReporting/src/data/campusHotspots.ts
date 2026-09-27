@@ -1,346 +1,302 @@
-// campusHotspots.ts
-
-export type HotspotType =
-  | "building"
-  | "room"
-  | "facility";
-
 export type CampusHotspot = {
   id: string;
   name: string;
-
-  // Coordinates are based on the ORIGINAL 2000 x 2000 PNG.
+  type: "building" | "facility";
   x: number;
   y: number;
   width: number;
   height: number;
-
-  type: HotspotType;
-
-  // Used when the hotspot represents a building
-  // that has its own detailed map.
-  map?: string;
 };
 
-export const CAMPUS_MAP_WIDTH = 2000;
-export const CAMPUS_MAP_HEIGHT = 2000;
-
+// Coordinates use the original Campus_Map.png pixel dimensions: 2000 × 2000.
+// x/y are the top-left corner of each hotspot.
 export const CAMPUS_HOTSPOTS: CampusHotspot[] = [
-  // =========================================================
   // BUILDINGS
-  // =========================================================
-
   {
     id: "building1",
     name: "Building 1",
-    x: 1188,
+    type: "building",
+    x: 1187,
     y: 45,
     width: 494,
     height: 232,
-    type: "building",
-    map: "building1",
   },
-
   {
     id: "building2",
     name: "Building 2",
-    x: 1659,
-    y: 926,
-    width: 326,
-    height: 775,
     type: "building",
-    map: "building2",
+    x: 1659,
+    y: 925,
+    width: 326,
+    height: 776,
   },
-
   {
-    id: "old-building",
+    id: "oldBuilding",
     name: "Old Building",
-    x: 996,
+    type: "building",
+    x: 995,
     y: 1640,
     width: 555,
     height: 314,
-    type: "building",
-    map: "old-building",
   },
-
   {
-    id: "building-cr",
+    id: "buildingCR",
     name: "Building CRs",
-    x: 1557,
-    y: 1731,
+    type: "building",
+    x: 1556,
+    y: 1730,
     width: 328,
     height: 195,
-    type: "building",
-    map: "building-cr",
   },
 
-  // =========================================================
-  // TOP-LEFT / MAIN CAMPUS FACILITIES
-  // =========================================================
-
-  {
-    id: "storage-house",
-    name: "Storage House",
-    x: 19,
-    y: 225,
-    width: 111,
-    height: 393,
-    type: "facility",
-  },
-
-  {
-    id: "parking-area",
-    name: "Parking Area",
-    x: 130,
-    y: 281,
-    width: 378,
-    height: 312,
-    type: "facility",
-  },
-
-  {
-    id: "guard-house",
-    name: "GuardHouse",
-    x: 37,
-    y: 827,
-    width: 208,
-    height: 207,
-    type: "facility",
-  },
-
-  {
-    id: "canteen",
-    name: "Canteen",
-    x: 82,
-    y: 1214,
-    width: 275,
-    height: 286,
-    type: "facility",
-  },
-
-  {
-    id: "radio-house",
-    name: "Radio House",
-    x: 18,
-    y: 1797,
-    width: 188,
-    height: 193,
-    type: "facility",
-  },
-
-  // =========================================================
-  // ADMIN / CLASSROOM FACILITIES
-  // =========================================================
-
-  {
-    id: "cashier",
-    name: "Cashier",
-    x: 530,
-    y: 237,
-    width: 141,
-    height: 129,
-    type: "facility",
-  },
-
-  {
-    id: "meeting-room",
-    name: "Meeting Room",
-    x: 530,
-    y: 385,
-    width: 141,
-    height: 93,
-    type: "facility",
-  },
-
-  {
-    id: "library",
-    name: "Library",
-    x: 538,
-    y: 497,
-    width: 125,
-    height: 313,
-    type: "facility",
-  },
-
-  {
-    id: "ict-room",
-    name: "ICT Room",
-    x: 342,
-    y: 623,
-    width: 169,
-    height: 181,
-    type: "facility",
-  },
-
-  {
-    id: "physics-lab",
-    name: "Physics Lab",
-    x: 889,
-    y: 103,
-    width: 122,
-    height: 108,
-    type: "facility",
-  },
-
-  {
-    id: "chem-lab",
-    name: "Chem Lab",
-    x: 1034,
-    y: 103,
-    width: 128,
-    height: 110,
-    type: "facility",
-  },
-
-  // =========================================================
-  // COURTYARD / RIGHT SIDE
-  // =========================================================
-
-  {
-    id: "courtyard",
-    name: "Courtyard",
-    x: 1192,
-    y: 358,
-    width: 332,
-    height: 547,
-    type: "facility",
-  },
-
-  {
-    id: "faculty",
-    name: "Faculty",
-    x: 1812,
-    y: 179,
-    width: 164,
-    height: 297,
-    type: "facility",
-  },
-
-  {
-    id: "drawing-room-1",
-    name: "Drawing Room 1",
-    x: 1793,
-    y: 497,
-    width: 183,
-    height: 198,
-    type: "room",
-  },
-
-  {
-    id: "drawing-room-2",
-    name: "Drawing Room 2",
-    x: 1793,
-    y: 695,
-    width: 183,
-    height: 200,
-    type: "room",
-  },
-
-  // =========================================================
-  // CRs
-  // =========================================================
-
+  // UPPER-LEFT FACILITIES
   {
     id: "male-cr1",
     name: "Male CR1",
-    x: 530,
-    y: 15,
-    width: 183,
-    height: 86,
-    type: "room",
+    type: "facility",
+    x: 584,
+    y: 18,
+    width: 132,
+    height: 77,
   },
-
   {
     id: "female-cr1",
     name: "Female CR1",
-    x: 463,
-    y: 112,
-    width: 170,
-    height: 101,
-    type: "room",
+    type: "facility",
+    x: 506,
+    y: 101,
+    width: 126,
+    height: 91,
   },
-
-  {
-    id: "female-cr2",
-    name: "Female CR2",
-    x: 1703,
-    y: 50,
-    width: 136,
-    height: 113,
-    type: "room",
-  },
-
-  {
-    id: "male-cr2",
-    name: "Male CR2",
-    x: 1859,
-    y: 49,
-    width: 130,
-    height: 115,
-    type: "room",
-  },
-
-  {
-    id: "male-cr3",
-    name: "Male CR3",
-    x: 267,
-    y: 1797,
-    width: 108,
-    height: 109,
-    type: "room",
-  },
-
-  {
-    id: "female-cr3",
-    name: "Female CR3",
-    x: 384,
-    y: 1797,
-    width: 92,
-    height: 109,
-    type: "room",
-  },
-
-  // =========================================================
-  // RV
-  // =========================================================
-
   {
     id: "rv1",
     name: "RV1",
-    x: 738,
-    y: 100,
+    type: "facility",
+    x: 737,
+    y: 99,
     width: 132,
     height: 113,
-    type: "room",
+  },
+  {
+    id: "physics-lab",
+    name: "Physics Lab",
+    type: "facility",
+    x: 888,
+    y: 102,
+    width: 122,
+    height: 108,
+  },
+  {
+    id: "chem-lab",
+    name: "Chem Lab",
+    type: "facility",
+    x: 1033,
+    y: 102,
+    width: 128,
+    height: 110,
+  },
+  {
+    id: "clinic",
+    name: "Clinic",
+    type: "facility",
+    x: 545,
+    y: 206,
+    width: 125,
+    height: 101,
+  },
+  {
+    id: "cashier",
+    name: "Cashier",
+    type: "facility",
+    x: 536,
+    y: 315,
+    width: 142,
+    height: 115,
+  },
+  {
+    id: "oa",
+    name: "OA",
+    type: "facility",
+    x: 538,
+    y: 436,
+    width: 139,
+    height: 117,
+  },
+  {
+    id: "library",
+    name: "Library",
+    type: "facility",
+    x: 544,
+    y: 562,
+    width: 125,
+    height: 273,
+  },
+  {
+    id: "ict-room",
+    name: "ICT Room",
+    type: "facility",
+    x: 341,
+    y: 622,
+    width: 169,
+    height: 180,
   },
 
+  // LEFT-SIDE FACILITIES
+  {
+    id: "storage-house",
+    name: "Storage House",
+    type: "facility",
+    x: 19,
+    y: 224,
+    width: 112,
+    height: 395,
+  },
+  {
+    id: "parking-area",
+    name: "Parking Area",
+    type: "facility",
+    x: 208,
+    y: 278,
+    width: 580,
+    height: 320,
+  },
+  {
+    id: "guard-house",
+    name: "Guard House",
+    type: "facility",
+    x: 36,
+    y: 826,
+    width: 211,
+    height: 210,
+  },
+  {
+    id: "canteen",
+    name: "Canteen",
+    type: "facility",
+    x: 81,
+    y: 1213,
+    width: 275,
+    height: 289,
+  },
+  {
+    id: "radio-house",
+    name: "Radio House",
+    type: "facility",
+    x: 17,
+    y: 1796,
+    width: 187,
+    height: 194,
+  },
+
+  // COURTYARD AND RIGHT-SIDE FACILITIES
+  {
+    id: "courtyard",
+    name: "Courtyard",
+    type: "facility",
+    x: 1191,
+    y: 357,
+    width: 333,
+    height: 548,
+  },
+  {
+    id: "female-cr2",
+    name: "Female CR2",
+    type: "facility",
+    x: 1702,
+    y: 50,
+    width: 136,
+    height: 113,
+  },
+  {
+    id: "male-cr2",
+    name: "Male CR2",
+    type: "facility",
+    x: 1858,
+    y: 48,
+    width: 130,
+    height: 115,
+  },
+  {
+    id: "faculty",
+    name: "Faculty",
+    type: "facility",
+    x: 1838,
+    y: 206,
+    width: 139,
+    height: 200,
+  },
+  {
+    id: "guidance-room",
+    name: "Guidance Room",
+    type: "facility",
+    x: 1838,
+    y: 418,
+    width: 137,
+    height: 119,
+  },
+  {
+    id: "rv5",
+    name: "RV5",
+    type: "facility",
+    x: 1828,
+    y: 556,
+    width: 147,
+    height: 152,
+  },
+  {
+    id: "rv6",
+    name: "RV6",
+    type: "facility",
+    x: 1821,
+    y: 723,
+    width: 154,
+    height: 157,
+  },
+
+  // LOWER-CAMPUS FACILITIES
+  {
+    id: "male-cr3",
+    name: "Male CR3",
+    type: "facility",
+    x: 266,
+    y: 1796,
+    width: 108,
+    height: 109,
+  },
+  {
+    id: "female-cr3",
+    name: "Female CR3",
+    type: "facility",
+    x: 383,
+    y: 1796,
+    width: 92,
+    height: 109,
+  },
   {
     id: "rv2",
     name: "RV2",
-    x: 488,
-    y: 1782,
+    type: "facility",
+    x: 487,
+    y: 1781,
     width: 156,
     height: 131,
-    type: "room",
   },
-
   {
     id: "rv3",
     name: "RV3",
-    x: 662,
-    y: 1782,
+    type: "facility",
+    x: 661,
+    y: 1781,
     width: 158,
     height: 131,
-    type: "room",
   },
-
   {
     id: "rv4",
     name: "RV4",
-    x: 840,
-    y: 1782,
+    type: "facility",
+    x: 839,
+    y: 1781,
     width: 149,
     height: 131,
-    type: "room",
   },
 ];

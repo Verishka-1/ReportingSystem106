@@ -43,17 +43,14 @@ export const buildings: Building[] = [
     id: "old",
     name: "Old Building",
   },
-
   {
     id: "new1",
-    name: "New Building 1",
+    name: "Building 1",
   },
-
   {
     id: "new2",
-    name: "New Building 2",
+    name: "Building 2",
   },
-
   {
     id: "cr",
     name: "Building CR",
@@ -67,6 +64,7 @@ export const buildings: Building[] = [
 export const rooms: Room[] = [
   /* ===================================================
      OLD BUILDING
+     Retained from the existing room list.
   =================================================== */
 
   {
@@ -76,7 +74,6 @@ export const rooms: Room[] = [
     building: "Old Building",
     floor: "3rd Floor",
   },
-
   {
     id: "old-301",
     name: "301",
@@ -84,7 +81,6 @@ export const rooms: Room[] = [
     building: "Old Building",
     floor: "3rd Floor",
   },
-
   {
     id: "old-avr",
     name: "AVR",
@@ -92,7 +88,6 @@ export const rooms: Room[] = [
     building: "Old Building",
     floor: "Ground Floor",
   },
-
   {
     id: "old-comlab-v1",
     name: "COMLAB - V1",
@@ -100,7 +95,6 @@ export const rooms: Room[] = [
     building: "Old Building",
     floor: "Ground Floor",
   },
-
   {
     id: "old-comlab-v3",
     name: "COMLAB - V3",
@@ -108,7 +102,6 @@ export const rooms: Room[] = [
     building: "Old Building",
     floor: "Ground Floor",
   },
-
   {
     id: "old-comlab-v2",
     name: "COMLAB - V2",
@@ -116,7 +109,6 @@ export const rooms: Room[] = [
     building: "Old Building",
     floor: "Ground Floor",
   },
-
   {
     id: "old-engineering-comlab",
     name: "ENGINEERING COMLAB",
@@ -126,207 +118,240 @@ export const rooms: Room[] = [
   },
 
   /* ===================================================
-     NEW BUILDING 1
+     BUILDING 1
+     Rooms shown on the updated Building 1 PNG.
   =================================================== */
 
+  // 3rd Floor
   {
-    id: "new1-r202",
-    name: "R-202",
+    id: "b1-309",
+    name: "B1 309",
     buildingId: "new1",
-    building: "New Building 1",
+    building: "Building 1",
+    floor: "3rd Floor",
+  },
+  {
+    id: "b1-310",
+    name: "B1 310",
+    buildingId: "new1",
+    building: "Building 1",
+    floor: "3rd Floor",
+  },
+  {
+    id: "b1-311",
+    name: "B1 311",
+    buildingId: "new1",
+    building: "Building 1",
+    floor: "3rd Floor",
+  },
+  {
+    id: "b1-312",
+    name: "B1 312",
+    buildingId: "new1",
+    building: "Building 1",
+    floor: "3rd Floor",
+  },
+
+  // 2nd Floor
+  {
+    id: "b1-205",
+    name: "B1 205",
+    buildingId: "new1",
+    building: "Building 1",
+    floor: "2nd Floor",
+  },
+  {
+    id: "b1-206",
+    name: "B1 206",
+    buildingId: "new1",
+    building: "Building 1",
+    floor: "2nd Floor",
+  },
+  {
+    id: "b1-207",
+    name: "B1 207",
+    buildingId: "new1",
+    building: "Building 1",
+    floor: "2nd Floor",
+  },
+  {
+    id: "b1-208",
+    name: "B1 208",
+    buildingId: "new1",
+    building: "Building 1",
     floor: "2nd Floor",
   },
 
+  // 1st Floor
   {
-    id: "new1-r201",
-    name: "R-201",
+    id: "b1-101",
+    name: "B1 101",
     buildingId: "new1",
-    building: "New Building 1",
-    floor: "2nd Floor",
-  },
-
-  {
-    id: "new1-r203",
-    name: "R-203",
-    buildingId: "new1",
-    building: "New Building 1",
-    floor: "2nd Floor",
-  },
-
-  {
-    id: "new1-r103",
-    name: "R-103",
-    buildingId: "new1",
-    building: "New Building 1",
+    building: "Building 1",
     floor: "1st Floor",
   },
-
   {
-    id: "new1-r102",
-    name: "R-102",
+    id: "b1-102",
+    name: "B1 102",
     buildingId: "new1",
-    building: "New Building 1",
+    building: "Building 1",
     floor: "1st Floor",
   },
-
   {
-    id: "new1-r101",
-    name: "R-101",
+    id: "b1-103",
+    name: "B1 103",
     buildingId: "new1",
-    building: "New Building 1",
+    building: "Building 1",
     floor: "1st Floor",
   },
-
   {
-    id: "new1-r010",
-    name: "R-010",
+    id: "b1-104",
+    name: "B1 104",
     buildingId: "new1",
-    building: "New Building 1",
-    floor: "Ground Floor",
-  },
-
-  {
-    id: "new1-r011",
-    name: "R-011",
-    buildingId: "new1",
-    building: "New Building 1",
-    floor: "Ground Floor",
-  },
-
-  {
-    id: "new1-r012",
-    name: "R-012",
-    buildingId: "new1",
-    building: "New Building 1",
-    floor: "Ground Floor",
+    building: "Building 1",
+    floor: "1st Floor",
   },
 
   /* ===================================================
-     NEW BUILDING 2
+     BUILDING 2
+     Rooms shown on the updated Building 2 PNG.
   =================================================== */
 
+  // 3rd Floor
   {
-    id: "new2-r213",
-    name: "R-213",
+    id: "b2-313",
+    name: "B2 313",
     buildingId: "new2",
-    building: "New Building 2",
+    building: "Building 2",
+    floor: "3rd Floor",
+  },
+  {
+    id: "b2-314",
+    name: "B2 314",
+    buildingId: "new2",
+    building: "Building 2",
+    floor: "3rd Floor",
+  },
+  {
+    id: "b2-315",
+    name: "B2 315",
+    buildingId: "new2",
+    building: "Building 2",
+    floor: "3rd Floor",
+  },
+  {
+    id: "b2-316",
+    name: "B2 316",
+    buildingId: "new2",
+    building: "Building 2",
+    floor: "3rd Floor",
+  },
+  {
+    id: "b2-317",
+    name: "B2 317",
+    buildingId: "new2",
+    building: "Building 2",
+    floor: "3rd Floor",
+  },
+  {
+    id: "b2-318",
+    name: "B2 318",
+    buildingId: "new2",
+    building: "Building 2",
+    floor: "3rd Floor",
+  },
+
+  // 2nd Floor
+  {
+    id: "b2-212",
+    name: "B2 212",
+    buildingId: "new2",
+    building: "Building 2",
+    floor: "2nd Floor",
+  },
+  {
+    id: "b2-211",
+    name: "B2 211",
+    buildingId: "new2",
+    building: "Building 2",
+    floor: "2nd Floor",
+  },
+  {
+    id: "b2-210",
+    name: "B2 210",
+    buildingId: "new2",
+    building: "Building 2",
+    floor: "2nd Floor",
+  },
+  {
+    id: "b2-209",
+    name: "B2 209",
+    buildingId: "new2",
+    building: "Building 2",
+    floor: "2nd Floor",
+  },
+  {
+    id: "b2-208",
+    name: "B2 208",
+    buildingId: "new2",
+    building: "Building 2",
+    floor: "2nd Floor",
+  },
+  {
+    id: "b2-207",
+    name: "B2 207",
+    buildingId: "new2",
+    building: "Building 2",
     floor: "2nd Floor",
   },
 
+  // 1st Floor
   {
-    id: "new2-r214",
-    name: "R-214",
+    id: "b2-101",
+    name: "B2 101",
     buildingId: "new2",
-    building: "New Building 2",
-    floor: "2nd Floor",
-  },
-
-  {
-    id: "new2-r215",
-    name: "R-215",
-    buildingId: "new2",
-    building: "New Building 2",
-    floor: "2nd Floor",
-  },
-
-  {
-    id: "new2-r216",
-    name: "R-216",
-    buildingId: "new2",
-    building: "New Building 2",
-    floor: "2nd Floor",
-  },
-
-  {
-    id: "new2-r217",
-    name: "R-217",
-    buildingId: "new2",
-    building: "New Building 2",
-    floor: "2nd Floor",
-  },
-
-  {
-    id: "new2-r211",
-    name: "R-211",
-    buildingId: "new2",
-    building: "New Building 2",
-    floor: "2nd Floor",
-  },
-
-  {
-    id: "new2-r210",
-    name: "R-210",
-    buildingId: "new2",
-    building: "New Building 2",
-    floor: "2nd Floor",
-  },
-
-  {
-    id: "new2-r209",
-    name: "R-209",
-    buildingId: "new2",
-    building: "New Building 2",
-    floor: "2nd Floor",
-  },
-
-  {
-    id: "new2-r208",
-    name: "R-208",
-    buildingId: "new2",
-    building: "New Building 2",
-    floor: "2nd Floor",
-  },
-
-  {
-    id: "new2-r207",
-    name: "R-207",
-    buildingId: "new2",
-    building: "New Building 2",
-    floor: "2nd Floor",
-  },
-
-  {
-    id: "new2-r101",
-    name: "R-101",
-    buildingId: "new2",
-    building: "New Building 2",
+    building: "Building 2",
     floor: "1st Floor",
   },
-
   {
-    id: "new2-r102",
-    name: "R-102",
+    id: "b2-102",
+    name: "B2 102",
     buildingId: "new2",
-    building: "New Building 2",
+    building: "Building 2",
     floor: "1st Floor",
   },
-
   {
-    id: "new2-r103",
-    name: "R-103",
+    id: "b2-103",
+    name: "B2 103",
     buildingId: "new2",
-    building: "New Building 2",
+    building: "Building 2",
     floor: "1st Floor",
   },
-
   {
-    id: "new2-r104",
-    name: "R-104",
+    id: "b2-104",
+    name: "B2 104",
     buildingId: "new2",
-    building: "New Building 2",
+    building: "Building 2",
     floor: "1st Floor",
   },
-
   {
-    id: "new2-r105",
-    name: "R-105",
+    id: "b2-105",
+    name: "B2 105",
     buildingId: "new2",
-    building: "New Building 2",
+    building: "Building 2",
+    floor: "1st Floor",
+  },
+  {
+    id: "b2-106",
+    name: "B2 106",
+    buildingId: "new2",
+    building: "Building 2",
     floor: "1st Floor",
   },
 
   /* ===================================================
      BUILDING CR
+     Retained from the existing room list.
   =================================================== */
 
   {
@@ -336,7 +361,6 @@ export const rooms: Room[] = [
     building: "Building CR",
     floor: "3rd Floor",
   },
-
   {
     id: "cr-male-3",
     name: "Male CR3",
@@ -344,7 +368,6 @@ export const rooms: Room[] = [
     building: "Building CR",
     floor: "3rd Floor",
   },
-
   {
     id: "cr-female-2",
     name: "Female CR2",
@@ -352,7 +375,6 @@ export const rooms: Room[] = [
     building: "Building CR",
     floor: "2nd Floor",
   },
-
   {
     id: "cr-male-2",
     name: "Male CR2",
@@ -360,7 +382,6 @@ export const rooms: Room[] = [
     building: "Building CR",
     floor: "2nd Floor",
   },
-
   {
     id: "cr-female-1",
     name: "Female CR1",
@@ -368,7 +389,6 @@ export const rooms: Room[] = [
     building: "Building CR",
     floor: "1st Floor",
   },
-
   {
     id: "cr-male-1",
     name: "Male CR1",
@@ -380,6 +400,7 @@ export const rooms: Room[] = [
 
 /* =====================================================
    SAMPLE REPORTS
+   Mock data for frontend preview only.
 ===================================================== */
 
 export const reports: Report[] = [
@@ -391,12 +412,10 @@ export const reports: Report[] = [
     building: "Old Building",
     floor: "3rd Floor",
     property: "Ceiling",
-    description:
-      "There is water leakage from the ceiling.",
+    description: "There is water leakage from the ceiling.",
     status: "Pending",
     date: "2026-09-05",
   },
-
   {
     id: "report-002",
     roomId: "old-302",
@@ -405,12 +424,10 @@ export const reports: Report[] = [
     building: "Old Building",
     floor: "3rd Floor",
     property: "Chair",
-    description:
-      "One classroom chair is damaged.",
+    description: "One classroom chair is damaged.",
     status: "Verified",
     date: "2026-09-08",
   },
-
   {
     id: "report-003",
     roomId: "old-302",
@@ -419,40 +436,34 @@ export const reports: Report[] = [
     building: "Old Building",
     floor: "3rd Floor",
     property: "Window",
-    description:
-      "Window glass is cracked.",
+    description: "Window glass is cracked.",
     status: "For Repair",
     date: "2026-09-10",
   },
-
   {
     id: "report-004",
-    roomId: "new1-r101",
-    room: "R-101",
+    roomId: "b1-101",
+    room: "B1 101",
     buildingId: "new1",
-    building: "New Building 1",
+    building: "Building 1",
     floor: "1st Floor",
     property: "Electric Fan",
-    description:
-      "The electric fan is not functioning properly.",
+    description: "The electric fan is not functioning properly.",
     status: "Pending",
     date: "2026-09-11",
   },
-
   {
     id: "report-005",
-    roomId: "new2-r208",
-    room: "R-208",
+    roomId: "b2-208",
+    room: "B2 208",
     buildingId: "new2",
-    building: "New Building 2",
+    building: "Building 2",
     floor: "2nd Floor",
     property: "Door",
-    description:
-      "The classroom door lock is damaged.",
+    description: "The classroom door lock is damaged.",
     status: "Repaired",
     date: "2026-09-12",
   },
-
   {
     id: "report-006",
     roomId: "old-comlab-v1",
@@ -461,12 +472,10 @@ export const reports: Report[] = [
     building: "Old Building",
     floor: "Ground Floor",
     property: "Computer",
-    description:
-      "One computer is not turning on.",
+    description: "One computer is not turning on.",
     status: "For Repair",
     date: "2026-09-13",
   },
-
   {
     id: "report-007",
     roomId: "old-302",
@@ -475,8 +484,7 @@ export const reports: Report[] = [
     building: "Old Building",
     floor: "3rd Floor",
     property: "Light",
-    description:
-      "One ceiling light is not working.",
+    description: "One ceiling light is not working.",
     status: "Repaired",
     date: "2026-09-15",
   },
@@ -489,23 +497,15 @@ export const reports: Report[] = [
 /**
  * Find one room using its ID.
  */
-export const getRoomById = (
-  roomId: string
-): Room | undefined => {
-  return rooms.find(
-    (room) => room.id === roomId
-  );
+export const getRoomById = (roomId: string): Room | undefined => {
+  return rooms.find((room) => room.id === roomId);
 };
 
 /**
  * Get all rooms belonging to one building.
  */
-export const getRoomsByBuilding = (
-  buildingId: string
-): Room[] => {
-  return rooms.filter(
-    (room) => room.buildingId === buildingId
-  );
+export const getRoomsByBuilding = (buildingId: string): Room[] => {
+  return rooms.filter((room) => room.buildingId === buildingId);
 };
 
 /* =====================================================
@@ -515,45 +515,29 @@ export const getRoomsByBuilding = (
 /**
  * Get all reports belonging to one room.
  */
-export const getReportsByRoom = (
-  roomId: string
-): Report[] => {
-  return reports.filter(
-    (report) => report.roomId === roomId
-  );
+export const getReportsByRoom = (roomId: string): Report[] => {
+  return reports.filter((report) => report.roomId === roomId);
 };
 
 /**
  * Count reports belonging to one room.
  */
-export const getReportCount = (
-  roomId: string
-): number => {
-  return reports.filter(
-    (report) => report.roomId === roomId
-  ).length;
+export const getReportCount = (roomId: string): number => {
+  return reports.filter((report) => report.roomId === roomId).length;
 };
 
 /**
  * Get all reports belonging to one building.
  */
-export const getReportsByBuilding = (
-  buildingId: string
-): Report[] => {
-  return reports.filter(
-    (report) => report.buildingId === buildingId
-  );
+export const getReportsByBuilding = (buildingId: string): Report[] => {
+  return reports.filter((report) => report.buildingId === buildingId);
 };
 
 /**
  * Count reports belonging to one building.
  */
-export const getBuildingReportCount = (
-  buildingId: string
-): number => {
-  return reports.filter(
-    (report) => report.buildingId === buildingId
-  ).length;
+export const getBuildingReportCount = (buildingId: string): number => {
+  return reports.filter((report) => report.buildingId === buildingId).length;
 };
 
 /* =====================================================
@@ -561,22 +545,12 @@ export const getBuildingReportCount = (
 ===================================================== */
 
 /**
- * Get a building together with its report count.
- *
- * Example:
- *
- * {
- *   id: "old",
- *   name: "Old Building",
- *   reportCount: 5
- * }
+ * Get a building together with its mock report count.
  */
 export const getBuildingReportSummary = () => {
   return buildings.map((building) => ({
     ...building,
-    reportCount: getBuildingReportCount(
-      building.id
-    ),
+    reportCount: getBuildingReportCount(building.id),
   }));
 };
 
@@ -585,21 +559,14 @@ export const getBuildingReportSummary = () => {
 ===================================================== */
 
 /**
- * Get all rooms for a building together
- * with their report counts.
- *
- * This is especially useful for the
- * ADMIN MAP.
+ * Get all rooms for a building together with their mock report counts.
+ * This can be used for a frontend preview of the admin map.
  */
-export const getRoomReportSummary = (
-  buildingId: string
-) => {
-  return getRoomsByBuilding(buildingId).map(
-    (room) => ({
-      ...room,
-      reportCount: getReportCount(room.id),
-    })
-  );
+export const getRoomReportSummary = (buildingId: string) => {
+  return getRoomsByBuilding(buildingId).map((room) => ({
+    ...room,
+    reportCount: getReportCount(room.id),
+  }));
 };
 
 /* =====================================================
@@ -609,16 +576,12 @@ export const getRoomReportSummary = (
 /**
  * Count reports with a specific status.
  */
-export const getReportCountByStatus = (
-  status: ReportStatus
-): number => {
-  return reports.filter(
-    (report) => report.status === status
-  ).length;
+export const getReportCountByStatus = (status: ReportStatus): number => {
+  return reports.filter((report) => report.status === status).length;
 };
 
 /**
- * Get all status counts.
+ * Get all mock report status counts.
  */
 export const getReportStatusSummary = () => {
   return {

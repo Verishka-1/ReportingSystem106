@@ -8,19 +8,17 @@ import {
 import { router } from "expo-router";
 
 import { COLORS, Spacing } from "../../constants/theme";
-
 import InteractiveMap from "../../components/InteractiveMap";
-
-// Use a runtime asset require so TypeScript does not try to resolve the PNG
-// as a typed module in this screen file.
-const campusMap = require("../../../assets/maps/Campus_Map.png");
-
 import {
   CAMPUS_HOTSPOTS,
   CampusHotspot,
 } from "../../data/campusHotspots";
 
+const campusMap = require("../../../assets/maps/Campus_Map.png");
+
 export default function CampusMapScreen() {
+  // InteractiveMap positions hotspots using left/top coordinates.
+  // The hotspot data is stored in the updated map's original pixel space.
   const mapHotspots = CAMPUS_HOTSPOTS.map((hotspot) => ({
     ...hotspot,
     left: hotspot.x,
@@ -28,44 +26,45 @@ export default function CampusMapScreen() {
   }));
 
   const openLocation = (hotspot: CampusHotspot) => {
-    if (hotspot.type === "building") {
-      router.push({
-        pathname: "/user/building-map",
-        params: {
-          building: hotspot.id,
-          name: hotspot.name,
-        },
-      } as any);
-
-      return;
-    }
-
+  if (hotspot.type === "building") {
     router.push({
-      pathname: "/user/report-damage",
+      pathname: "/user/building-map",
       params: {
-        building: hotspot.name,
-        room: hotspot.name,
+        building: hotspot.id,
+        name: hotspot.name,
       },
     } as any);
-  };
+
+    return;
+  }
+
+  // Campus facilities (such as Guidance Room) go directly to the report form.
+  router.push({
+    pathname: "/user/report-damage",
+    params: {
+      building: hotspot.id,
+      buildingName: hotspot.name,
+      room: hotspot.id,
+      roomName: hotspot.name,
+    },
+  } as any);
+};
 
   return (
     <View style={styles.container}>
-
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backButton}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           <Text style={styles.backText}>‹</Text>
         </TouchableOpacity>
 
         <View style={styles.headerText}>
-          <Text style={styles.title}>
-            Select Location
-          </Text>
-
+          <Text style={styles.title}>Select Location</Text>
           <Text style={styles.subtitle}>
             Tap the building, room, or facility where the damage occurred
           </Text>
@@ -90,7 +89,6 @@ export default function CampusMapScreen() {
           Pinch to zoom • Drag to move • Double tap to reset
         </Text>
       </View>
-
     </View>
   );
 }
@@ -106,10 +104,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: 50,
     paddingBottom: Spacing.md,
-
     flexDirection: "row",
     alignItems: "center",
-
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
@@ -118,12 +114,9 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-
     backgroundColor: COLORS.maroon,
-
     alignItems: "center",
     justifyContent: "center",
-
     marginRight: 12,
   },
 
@@ -157,10 +150,8 @@ const styles = StyleSheet.create({
 
   instruction: {
     backgroundColor: COLORS.white,
-
     paddingVertical: 12,
     paddingHorizontal: 16,
-
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
